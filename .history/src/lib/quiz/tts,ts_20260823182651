@@ -1,0 +1,100 @@
+import meSpeak from "mespeak";
+// @ts-expect-error -- json asset import, no types shipped
+import mespeakConfig from "mespeak/src/mespeak_config.json";
+
+export interface TtsSegment {
+  /** Narration text for this cue. */
+  text: string;
+  /** When this line should start playing, in seconds from video start. */
+  startSec: number;
+}
+
+export interface SynthesizedClip extends TtsSegment {
+  blob: Blob;
+  mime: string;
+  durationSec: number;
+}
+
+export interface TtsProvider {
+  synthesize(text: string): Promise<{ blob: Blob; mime: string }>;
+}
+
+/**
+ * Maps quiz languages to the meSpeak voice file to load for them.
+ * Adjust these keys to match the actual string values in your `Language`
+ * union (types.ts) — these are meSpeak's built-in voice ids.
+ */
+const VOICE_FILES: Record<string, string> = {
+  English: "mespeak/voices/en/en-us.json",
+  Hindi: "mespeak/voices/hi/hi.json",
+};
+const DEFAULT_VOICE = "mespeak/voices/en/en-us.json";
+
+let configLoaded = false;
+const loadedVoices = new Set<string>();
+
+async function ensureVoice(language: string) {
+  if (!configLoaded) {
+    meSpeak.loadConfig(mespeakConfig);
+    configLoaded = true;
+  }
+  const path = VOICE_FILES[language] ?? DEFAULT_VOICE;
+  if (loadedVoices.has(path)) return;
+  const voiceData = await import(/* @vite-ignore */ path);
+  meSpeak.loadVoice(voiceData.default ?? voiceData);
+  loadedVoices.add(path);
+}
+
+/**
+ * Fully offline TTS — no API key, no network call, no AI model.
+ * Classic formant synthesis (eSpeak port). Robotic but real, free, synchronous.
+ */
+export class MeSpeakTtsProvider implements TtsProvider {
+  constructor(private language: string) {}
+
+  async synthesize(text: string): Promise<{ blob: Blob; mime: string }> {
+    await ensureVoice(this.language);
+    const bytes: number[] | Uint8Array | undefined = meSpeak.speak(text, {
+      rawdata: "array",
+      speed: 160,
+      pitch: 50,
+      amplitude: 100,
+    });
+    if (!bytes || bytes.length === 0) {
+      throw new Error("Local TTS engine (meSpeak) failed to synthesize this line.");
+    }
+    const blob = new Blob([new Uint8Array(bytes)], { type: "audio/wav" });
+    return { blob, mime: "audio/wav" };
+  }
+}
+
+export async function getAudioBlobDuration(blob: Blob): Promise<number> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new Ctor();
+  try {
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    return audioBuffer.duration;
+  } finally {
+    void ctx.close();
+  }
+}
+
+/** Synthesizes every narration line as a real, offline-generated audio Blob. */
+export async function synthesizeNarration(
+  segments: TtsSegment[],
+  language: string,
+  onProgress?: (done: number, total: number) => void,
+): Promise<SynthesizedClip[]> {
+  if (segments.length === 0) return [];
+  const provider = new MeSpeakTtsProvider(language);
+  const clips: SynthesizedClip[] = [];
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]!;
+    const { blob, mime } = await provider.synthesize(seg.text);
+    const durationSec = await getAudioBlobDuration(blob);
+    clips.push({ ...seg, blob, mime, durationSec });
+    onProgress?.(i + 1, segments.length);
+  }
+  return clips;
+}

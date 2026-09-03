@@ -1,0 +1,812 @@
+import {
+  LANGUAGE_LOCALES,
+  VOICE_TUNING,
+  type AudioSettings,
+  type Language,
+} from "./types";
+import type { Cue } from "./timeline";
+
+/* Web Audio SFX + music bed, plus speech synthesis narration. */
+
+export type SfxName = NonNullable<Cue["sfx"]>;
+
+export class AudioEngine {
+  private ctx: AudioContext | null = null;
+  private sfxGain: GainNode | null = null;
+  private musicGain: GainNode | null = null;
+  private voiceGain: GainNode | null = null;
+
+  private musicTimer: number | null = null;
+  private musicStep = 0;
+
+  dest: MediaStreamAudioDestinationNode | null = null;
+
+  // Tab-audio capture for SpeechSynthesis narration.
+  private captureStream: MediaStream | null = null;
+  private captureSource: MediaStreamAudioSourceNode | null = null;
+  private captureAttempted = false;
+  private captureReady: Promise<boolean> | null = null;
+
+  // Waits for Chrome/system voices to become available.
+  private voicesReady: Promise<void> | null = null;
+
+  constructor() {
+    this.prepareVoices();
+  }
+
+  /**
+   * Chrome may initially return [] from speechSynthesis.getVoices().
+   * Wait until the browser has populated the voice list.
+   */
+  private prepareVoices(): Promise<void> {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      return Promise.resolve();
+    }
+
+    if (this.voicesReady) {
+      return this.voicesReady;
+    }
+
+    this.voicesReady = new Promise((resolve) => {
+      const synth = window.speechSynthesis;
+
+      const initialVoices = synth.getVoices();
+
+      if (initialVoices.length > 0) {
+        console.log(
+          "[audio] Voices already available:",
+          initialVoices.map(
+            (v) => `${v.name} (${v.lang})`
+          )
+        );
+
+        resolve();
+        return;
+      }
+
+      let resolved = false;
+
+      const finish = () => {
+        if (resolved) return;
+
+        resolved = true;
+
+        synth.removeEventListener(
+          "voiceschanged",
+          finish
+        );
+
+        const voices = synth.getVoices();
+
+        console.log(
+          "[audio] Voices loaded:",
+          voices.map(
+            (v) => `${v.name} (${v.lang})`
+          )
+        );
+
+        resolve();
+      };
+
+      synth.addEventListener(
+        "voiceschanged",
+        finish
+      );
+
+      // Fallback for browsers that don't fire voiceschanged.
+      window.setTimeout(
+        finish,
+        1500
+      );
+    });
+
+    return this.voicesReady;
+  }
+
+  get hasContext() {
+    return this.ctx !== null;
+  }
+
+  get hasNarrationCapture() {
+    return this.captureSource !== null;
+  }
+
+  ensure() {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    if (!this.ctx) {
+      const Ctor =
+        window.AudioContext ??
+        (
+          window as unknown as {
+            webkitAudioContext: typeof AudioContext;
+          }
+        ).webkitAudioContext;
+
+      if (!Ctor) {
+        return null;
+      }
+
+      this.ctx = new Ctor();
+
+      this.sfxGain =
+        this.ctx.createGain();
+
+      this.musicGain =
+        this.ctx.createGain();
+
+      this.voiceGain =
+        this.ctx.createGain();
+
+      this.dest =
+        this.ctx.createMediaStreamDestination();
+
+      // SFX and music go to speakers and recording.
+      for (const g of [
+        this.sfxGain,
+        this.musicGain,
+      ]) {
+        g.connect(
+          this.ctx.destination
+        );
+
+        g.connect(this.dest);
+      }
+
+      /*
+       * SpeechSynthesis is captured from the tab.
+       * voiceGain therefore only feeds recording.
+       */
+      this.voiceGain.connect(
+        this.dest
+      );
+    }
+
+    if (
+      this.ctx.state === "suspended"
+    ) {
+      void this.ctx.resume();
+    }
+
+    return this.ctx;
+  }
+
+  apply(settings: AudioSettings) {
+    this.ensure();
+
+    if (
+      !this.sfxGain ||
+      !this.musicGain ||
+      !this.voiceGain
+    ) {
+      return;
+    }
+
+    const m =
+      settings.muted ? 0 : 1;
+
+    this.sfxGain.gain.value =
+      settings.sfxVolume * m;
+
+    this.musicGain.gain.value =
+      (
+        settings.music
+          ? settings.musicVolume * 0.35
+          : 0
+      ) * m;
+
+    this.voiceGain.gain.value =
+      settings.voiceVolume * m;
+  }
+
+  /**
+   * Capture this browser tab's audio so SpeechSynthesis
+   * narration can be included in the recorded video.
+   */
+  async captureNarration(): Promise<boolean> {
+    const ctx = this.ensure();
+
+    if (!ctx) {
+      return false;
+    }
+
+    if (this.captureSource) {
+      return true;
+    }
+
+    if (this.captureReady) {
+      return this.captureReady;
+    }
+
+    this.captureReady =
+      (async () => {
+        this.captureAttempted = true;
+
+        if (
+          !navigator.mediaDevices
+            ?.getDisplayMedia
+        ) {
+          console.warn(
+            "[audio] getDisplayMedia unsupported. Narration cannot be recorded."
+          );
+
+          return false;
+        }
+
+        try {
+          const stream =
+            await navigator.mediaDevices.getDisplayMedia(
+              {
+                video: true,
+                audio: true,
+                preferCurrentTab: true,
+                selfBrowserSurface:
+                  "include",
+              } as DisplayMediaStreamOptions
+            );
+
+          // We only need audio.
+          stream
+            .getVideoTracks()
+            .forEach((track) =>
+              track.stop()
+            );
+
+          const audioTracks =
+            stream.getAudioTracks();
+
+          if (!audioTracks.length) {
+            console.warn(
+              "[audio] No tab audio track returned. Enable 'Share tab audio'."
+            );
+
+            stream
+              .getTracks()
+              .forEach((t) =>
+                t.stop()
+              );
+
+            return false;
+          }
+
+          this.captureStream =
+            new MediaStream(
+              audioTracks
+            );
+
+          this.captureSource =
+            ctx.createMediaStreamSource(
+              this.captureStream
+            );
+
+          this.captureSource.connect(
+            this.voiceGain!
+          );
+
+          console.log(
+            "[audio] Narration capture connected. Tracks:",
+            audioTracks.length
+          );
+
+          return true;
+        } catch (err) {
+          console.warn(
+            "[audio] Narration capture was not granted:",
+            err
+          );
+
+          return false;
+        }
+      })();
+
+    return this.captureReady;
+  }
+
+  stopNarrationCapture() {
+    this.captureSource?.disconnect();
+
+    this.captureSource = null;
+
+    this.captureStream
+      ?.getTracks()
+      .forEach((t) =>
+        t.stop()
+      );
+
+    this.captureStream = null;
+    this.captureReady = null;
+  }
+
+  /**
+   * NEW — actively confirms that real audio is flowing through the
+   * captured tab-audio track, instead of trusting that
+   * `captureNarration()` resolving true means usable audio exists.
+   *
+   * `captureNarration()` only tells you a MediaStreamTrack object was
+   * returned by getDisplayMedia — it says nothing about whether the user
+   * actually picked "this tab" + checked "share audio" in the picker.
+   * If they picked the wrong source, you get a live-looking but
+   * permanently-silent track, and the export would otherwise "succeed"
+   * with no narration.
+   *
+   * This taps an AnalyserNode off the same captureSource that feeds
+   * voiceGain -> dest (a parallel connection, so it does not alter the
+   * existing recording path at all) and samples time-domain amplitude
+   * for `windowMs` while speech is expected to be playing. Call this
+   * concurrently with the FIRST audio.speak() of an export.
+   */
+  async verifyNarrationSignal(
+    windowMs = 600
+  ): Promise<boolean> {
+    const ctx = this.ctx;
+
+    if (!ctx || !this.captureSource) {
+      return false;
+    }
+
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+
+    // Parallel tap — does NOT remove/replace the existing
+    // captureSource -> voiceGain -> dest connection.
+    this.captureSource.connect(analyser);
+
+    const data = new Uint8Array(
+      analyser.frequencyBinCount
+    );
+
+    const start = performance.now();
+    let peak = 0;
+
+    while (performance.now() - start < windowMs) {
+      analyser.getByteTimeDomainData(data);
+
+      for (let i = 0; i < data.length; i++) {
+        const deviation = Math.abs(
+          (data[i] as number) - 128
+        );
+
+        if (deviation > peak) {
+          peak = deviation;
+        }
+      }
+
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve())
+      );
+    }
+
+    analyser.disconnect();
+
+    // 128 is the silence baseline for 8-bit time-domain samples.
+    // A peak deviation this small means no real audio arrived — the
+    // captured "tab audio" track is present but carrying silence.
+    const hasSignal = peak > 4;
+
+    console.log(
+      "[audio] Narration signal check — peak deviation:",
+      peak,
+      hasSignal ? "(OK)" : "(SILENT — capture is not carrying audio)"
+    );
+
+    return hasSignal;
+  }
+
+  private tone(
+    freq: number,
+    dur: number,
+    type: OscillatorType,
+    gain = 0.5,
+    delay = 0,
+    slideTo?: number
+  ) {
+    const ctx = this.ensure();
+
+    if (!ctx || !this.sfxGain) {
+      return;
+    }
+
+    const t0 =
+      ctx.currentTime + delay;
+
+    const osc =
+      ctx.createOscillator();
+
+    const g =
+      ctx.createGain();
+
+    osc.type = type;
+
+    osc.frequency.setValueAtTime(
+      freq,
+      t0
+    );
+
+    if (slideTo) {
+      osc.frequency.exponentialRampToValueAtTime(
+        slideTo,
+        t0 + dur
+      );
+    }
+
+    g.gain.setValueAtTime(
+      0.0001,
+      t0
+    );
+
+    g.gain.exponentialRampToValueAtTime(
+      gain,
+      t0 + 0.012
+    );
+
+    g.gain.exponentialRampToValueAtTime(
+      0.0001,
+      t0 + dur
+    );
+
+    osc
+      .connect(g)
+      .connect(this.sfxGain);
+
+    osc.start(t0);
+
+    osc.stop(
+      t0 + dur + 0.05
+    );
+  }
+
+  private noise(
+    dur: number,
+    gain = 0.25
+  ) {
+    const ctx = this.ensure();
+
+    if (!ctx || !this.sfxGain) {
+      return;
+    }
+
+    const buf =
+      ctx.createBuffer(
+        1,
+        ctx.sampleRate * dur,
+        ctx.sampleRate
+      );
+
+    const d =
+      buf.getChannelData(0);
+
+    for (
+      let i = 0;
+      i < d.length;
+      i++
+    ) {
+      d[i] =
+        (Math.random() * 2 - 1) *
+        (1 - i / d.length);
+    }
+
+    const src =
+      ctx.createBufferSource();
+
+    src.buffer = buf;
+
+    const g =
+      ctx.createGain();
+
+    g.gain.value = gain;
+
+    src
+      .connect(g)
+      .connect(this.sfxGain);
+
+    src.start();
+  }
+
+  sfx(name: SfxName) {
+    switch (name) {
+      case "board":
+        this.tone(320, 0.25, "sine", 0.4, 0, 780);
+        break;
+
+      case "pop":
+        this.tone(660, 0.12, "triangle", 0.35, 0, 980);
+        break;
+
+      case "point":
+        this.tone(880, 0.09, "sine", 0.3, 0, 1240);
+        break;
+
+      case "tick":
+        this.tone(520, 0.09, "square", 0.18);
+        break;
+
+      case "final":
+        this.tone(300, 0.4, "sawtooth", 0.28, 0, 120);
+        break;
+
+      case "correct":
+        [523, 659, 784, 1046].forEach((f, i) =>
+          this.tone(f, 0.28, "triangle", 0.36, i * 0.09)
+        );
+        break;
+
+      case "confetti":
+        this.noise(0.5, 0.18);
+        break;
+
+      case "cheer":
+        [784, 988, 1175].forEach((f, i) =>
+          this.tone(f, 0.5, "sine", 0.24, i * 0.12)
+        );
+
+        this.noise(0.7, 0.1);
+
+        break;
+    }
+  }
+
+  startMusic() {
+    const ctx = this.ensure();
+
+    if (!ctx || this.musicTimer != null) {
+      return;
+    }
+
+    const notes = [523, 587, 659, 784, 659, 587, 523, 440];
+
+    this.musicTimer = window.setInterval(() => {
+      if (!this.musicGain || !this.ctx) {
+        return;
+      }
+
+      const f = notes[this.musicStep % notes.length]!;
+
+      this.musicStep++;
+
+      const t0 = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.value = f;
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.42);
+
+      osc.connect(g).connect(this.musicGain);
+
+      osc.start(t0);
+      osc.stop(t0 + 0.5);
+    }, 420);
+  }
+
+  stopMusic() {
+    if (this.musicTimer != null) {
+      clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+  }
+
+  /**
+   * Speak using an Indian English female voice, and resolve with the
+   * ACTUAL spoken duration in seconds once the browser fires the
+   * utterance's 'end' event.
+   *
+   * This return value is now the single source of truth for how long a
+   * narration beat took — callers (export.ts) use it directly instead of
+   * guessing from word count ahead of time.
+   *
+   * Voice priority:
+   * 1. en-IN female voice
+   * 2. known Indian English female voice names
+   * 3. any en-IN voice
+   *
+   * The language is forced to en-IN.
+   */
+  async speak(
+    text: string,
+    language: Language,
+    settings: AudioSettings
+  ): Promise<number> {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      console.warn("[audio] speechSynthesis unsupported.");
+      return 0;
+    }
+
+    if (settings.muted || settings.voiceVolume <= 0) {
+      // No narration will actually play — 0 tells the caller there's no
+      // real spoken duration to sync to, so it can fall back to an
+      // estimate for pacing purposes.
+      return 0;
+    }
+
+    if (this.captureAttempted && !this.captureSource) {
+      console.warn(
+        "[audio] Narration capture is not connected. Narration may not appear in the recorded video."
+      );
+    }
+
+    /*
+     * Wait for Chrome to populate voices BEFORE the first narration.
+     */
+    await this.prepareVoices();
+
+    const u = new SpeechSynthesisUtterance(text);
+
+    const tune = VOICE_TUNING[settings.voice];
+
+    /*
+     * IMPORTANT:
+     * Force Indian English. We do NOT use en-US/Zira here.
+     */
+    const locale = "en-IN";
+
+    u.lang = locale;
+    u.pitch = tune.pitch;
+    u.rate = tune.rate;
+    u.volume = settings.voiceVolume;
+
+    const voices = window.speechSynthesis.getVoices();
+
+    const indianVoices = voices.filter(
+      (v) =>
+        v.lang.toLowerCase() === "en-in" ||
+        v.lang.toLowerCase().startsWith("en-in")
+    );
+
+    let indianFemaleVoice = indianVoices.find((v) =>
+      /female|heera|neerja|priya|rani|swara|google.*india|india.*female/i.test(
+        v.name
+      )
+    );
+
+    if (!indianFemaleVoice) {
+      indianFemaleVoice = indianVoices.find((v) =>
+        /google|microsoft/i.test(v.name)
+      );
+    }
+
+    if (!indianFemaleVoice) {
+      indianFemaleVoice = indianVoices[0];
+    }
+
+    if (indianFemaleVoice) {
+      u.voice = indianFemaleVoice;
+
+      console.log(
+        "[audio] 🇮🇳 INDIAN ENGLISH VOICE SELECTED:",
+        indianFemaleVoice.name,
+        indianFemaleVoice.lang
+      );
+    } else {
+      console.error("[audio] ❌ NO en-IN VOICE AVAILABLE.");
+
+      console.error(
+        "[audio] Available browser voices:",
+        voices.map((v) => `${v.name} (${v.lang})`)
+      );
+
+      u.lang = "en-IN";
+    }
+
+    console.log("[audio] TTS language:", u.lang);
+    console.log("[audio] TTS voice:", u.voice?.name ?? "browser default");
+    console.log(
+      `[audio] TTS start: "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}"`
+    );
+
+    /*
+     * Cancel previous speech.
+     */
+    window.speechSynthesis.cancel();
+
+    /*
+     * Small delay makes Chrome more reliable about respecting the
+     * selected voice.
+     */
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 50);
+    });
+
+    const start = performance.now();
+
+    return new Promise<number>((resolve) => {
+      let settled = false;
+
+      /*
+       * Safety net ONLY — not a target duration. Some browser/OS
+       * combinations (backgrounded tabs, certain mobile WebViews) can
+       * fail to fire 'end' at all. Without this, a stuck utterance would
+       * hang the render forever. This timeout is deliberately generous
+       * (well beyond any realistic speech length) so it almost never
+       * fires under normal conditions — real timing always comes from
+       * 'end'/'error' below.
+       */
+      const fallbackMs = Math.max(
+        4000,
+        text.split(/\s+/).length * 500
+      );
+
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        const spokenSeconds = (performance.now() - start) / 1000;
+        resolve(spokenSeconds);
+      };
+
+      const timer = window.setTimeout(() => {
+        console.warn(
+          "[audio] speech 'end' never fired — using fallback timeout.",
+          text.slice(0, 40)
+        );
+        finish();
+      }, fallbackMs);
+
+      u.onend = () => {
+        console.log("[audio] TTS end:", text.slice(0, 40));
+        finish();
+      };
+
+      u.onerror = (e) => {
+        console.warn("[audio] speech error:", e);
+        finish();
+      };
+
+      window.speechSynthesis.speak(u);
+    });
+  }
+
+  /**
+   * Wait until current narration finishes. Kept as a standalone utility
+   * (no longer needed by export.ts, which now awaits speak()'s own
+   * promise directly) but left available for other call sites.
+   */
+  waitForSpeechEnd(timeoutMs = 8000): Promise<void> {
+    if (
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window)
+    ) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const timer = window.setTimeout(resolve, timeoutMs);
+
+      const check = () => {
+        if (!window.speechSynthesis.speaking) {
+          clearTimeout(timer);
+          resolve();
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+
+      check();
+    });
+  }
+
+  stopSpeech() {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  dispose() {
+    this.stopMusic();
+    this.stopSpeech();
+    this.stopNarrationCapture();
+    void this.ctx?.close();
+    this.ctx = null;
+  }
+}

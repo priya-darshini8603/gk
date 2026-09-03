@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/server.ts",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1787487116610,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1787487116610,
+            "name": "Commit-0",
+            "content": "import \"./lib/error-capture\";\n\nimport { consumeLastCapturedError } from \"./lib/error-capture\";\nimport { renderErrorPage } from \"./lib/error-page\";\n\ntype ServerEntry = {\n  fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;\n};\n\nlet serverEntryPromise: Promise<ServerEntry> | undefined;\n\nasync function getServerEntry(): Promise<ServerEntry> {\n  if (!serverEntryPromise) {\n    serverEntryPromise = import(\"@tanstack/react-start/server-entry\").then(\n      (m) => (m.default ?? m) as ServerEntry,\n    );\n  }\n  return serverEntryPromise;\n}\n\n// h3 swallows in-handler throws into a normal 500 Response with body\n// {\"unhandled\":true,\"message\":\"HTTPError\"} — try/catch alone never fires for those.\nasync function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {\n  if (response.status < 500) return response;\n  const contentType = response.headers.get(\"content-type\") ?? \"\";\n  if (!contentType.includes(\"application/json\")) return response;\n\n  const body = await response.clone().text();\n  if (!isH3SwallowedErrorBody(body)) return response;\n\n  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));\n  return new Response(renderErrorPage(), {\n    status: 500,\n    headers: { \"content-type\": \"text/html; charset=utf-8\" },\n  });\n}\n\nfunction isH3SwallowedErrorBody(body: string): boolean {\n  try {\n    const payload = JSON.parse(body) as { unhandled?: unknown; message?: unknown };\n    return payload.unhandled === true && payload.message === \"HTTPError\";\n  } catch {\n    return false;\n  }\n}\n\nasync function proxyTts(request: Request): Promise<Response> {\n  const incoming = new URL(request.url);\n  const upstream = new URL(\"https://translate.google.com/translate_tts\");\n  for (const key of [\"ie\", \"client\", \"tl\", \"q\", \"voice\"]) {\n    const value = incoming.searchParams.get(key);\n    if (value) upstream.searchParams.set(key, value);\n  }\n  const response = await fetch(upstream);\n  if (!response.ok) {\n    return new Response(\"TTS service unavailable\", { status: 502 });\n  }\n  return new Response(await response.arrayBuffer(), {\n    headers: { \"content-type\": response.headers.get(\"content-type\") ?? \"audio/mpeg\", \"cache-control\": \"no-store\" },\n  });\n}\n\nexport default {\n  async fetch(request: Request, env: unknown, ctx: unknown) {\n    try {\n      if (new URL(request.url).pathname === \"/api/tts\") return await proxyTts(request);\n      const handler = await getServerEntry();\n      const response = await handler.fetch(request, env, ctx);\n      return await normalizeCatastrophicSsrResponse(response);\n    } catch (error) {\n      console.error(error);\n      return new Response(renderErrorPage(), {\n        status: 500,\n        headers: { \"content-type\": \"text/html; charset=utf-8\" },\n      });\n    }\n  },\n};\n"
+        }
+    ]
+}
