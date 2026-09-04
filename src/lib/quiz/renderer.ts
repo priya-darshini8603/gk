@@ -109,14 +109,6 @@ interface Layout {
   board: { x: number; y: number; w: number; h: number };
   options: { x: number; y: number; w: number; h: number }[];
   owl: { x: number; y: number; size: number };
-  /**
-   * Fraction of frame width used for the owl's entrance-walk slide and its
-   * small idle wobble (`state.owlX` in timeline.ts is in units of this
-   * fraction). Derived from the actual margin outside the whiteboard so the
-   * owl can never animate into the board's bounding box, regardless of how
-   * BOARD_WIDTH_FRACTION below is tuned.
-   */
-  owlWalkFrac: number;
   portrait: boolean;
 }
 
@@ -124,31 +116,15 @@ interface Layout {
  * reallocate a fresh layout object (and 4 option-rect objects) every frame. */
 let layoutCache: { key: string; layout: Layout } | null = null;
 
-/**
- * MOBILE-SAFE FRAMING
- *
- * The whiteboard is always centered inside this fraction of the frame
- * width (0.62 sits inside the requested 60–70% band, biased toward the
- * lower end for extra margin). That guarantees:
- *   - equal, generous margins on both left and right (never near an edge)
- *   - the board's horizontal center always sits exactly at w/2, so the
- *     countdown "zoom in" effect (which scales from canvas center) zooms
- *     into the board's own center instead of dragging it sideways
- *   - survives reasonably aggressive responsive re-crops without losing
- *     any part of the board
- */
-const BOARD_WIDTH_FRACTION = 0.62;
-
 export function computeLayout(w: number, h: number): Layout {
   const key = `${w}x${h}`;
   if (layoutCache && layoutCache.key === key) return layoutCache.layout;
 
   const portrait = h > w;
-  const boardMarginX = (1 - BOARD_WIDTH_FRACTION) / 2;
   let layout: Layout;
 
   if (!portrait) {
-    const board = { x: w * boardMarginX, y: h * 0.07, w: w * BOARD_WIDTH_FRACTION, h: h * 0.82 };
+    const board = { x: w * 0.045, y: h * 0.07, w: w * 0.63, h: h * 0.82 };
     const pad = board.w * 0.05;
     const ow = (board.w - pad * 3) / 2;
     const oh = board.h * 0.19;
@@ -159,38 +135,9 @@ export function computeLayout(w: number, h: number): Layout {
       w: ow,
       h: oh,
     }));
-
-    // The owl lives entirely in the right-hand margin outside the centered
-    // whiteboard. Its size is derived from that margin (capped to the
-    // original artistic size so it never grows huge on wider margins) so it
-    // physically cannot overlap the board.
-    const rightMarginW = w - (board.x + board.w); // == w * boardMarginX
-    const boardGap = w * 0.018; // gap kept clear next to the board edge
-    const edgeGap = w * 0.018; // gap kept clear next to the frame edge
-    const owlWidthCap = h * 0.368; // ~ 0.8 * original 0.46h owl height
-    const owlWidth = Math.max(
-      w * 0.06,
-      Math.min(rightMarginW - boardGap - edgeGap, owlWidthCap),
-    );
-    const owlSize = owlWidth / 0.8;
-    const owlX = board.x + board.w + boardGap + owlWidth / 2;
-
-    // Safe horizontal travel for the owl's walk-in / idle wobble: at its
-    // most extreme (start of the "enter" beat, offset factor -1.1) the owl
-    // must still sit to the right of the board's edge plus a buffer.
-    const buffer = w * 0.01;
-    const maxLeftTravel = Math.max(0, owlX - (board.x + board.w) - buffer);
-    const owlWalkFrac = Math.min(0.12, maxLeftTravel / (1.1 * w));
-
-    layout = {
-      board,
-      options,
-      owl: { x: owlX, y: h * 0.93, size: owlSize },
-      owlWalkFrac,
-      portrait,
-    };
+    layout = { board, options, owl: { x: w * 0.845, y: h * 0.93, size: h * 0.46 }, portrait };
   } else {
-    const board = { x: w * boardMarginX, y: h * 0.06, w: w * BOARD_WIDTH_FRACTION, h: h * 0.56 };
+    const board = { x: w * 0.05, y: h * 0.06, w: w * 0.9, h: h * 0.56 };
     const pad = board.w * 0.05;
     const ow = (board.w - pad * 3) / 2;
     const oh = board.h * 0.17;
@@ -201,16 +148,7 @@ export function computeLayout(w: number, h: number): Layout {
       w: ow,
       h: oh,
     }));
-    // The owl stands centered underneath the whiteboard — its top is always
-    // well below the board's bottom edge, so horizontal margin size doesn't
-    // affect overlap safety here; only the board needed re-centering.
-    layout = {
-      board,
-      options,
-      owl: { x: w * 0.5, y: h * 0.97, size: h * 0.3 },
-      owlWalkFrac: 0.22,
-      portrait,
-    };
+    layout = { board, options, owl: { x: w * 0.5, y: h * 0.97, size: h * 0.3 }, portrait };
   }
 
   layoutCache = { key, layout };
@@ -611,10 +549,7 @@ export function drawFrame(
   scene.draw(ctx, w, h, t);
   drawBoard(ctx, quiz, s, l, t, scene.dark);
 
-  // owlWalkFrac replaces the old fixed (portrait ? w*0.22 : w*0.12) — it's
-  // now sized per-layout so the walk-in/wobble offset can never carry the
-  // owl into the whiteboard's bounding box.
-  const owlX = l.owl.x + s.owlX * w * l.owlWalkFrac;
+  const owlX = l.owl.x + s.owlX * (l.portrait ? w * 0.22 : w * 0.12);
   ctx.save();
   ctx.globalAlpha = clamp01(s.owlEnter * 1.4);
   // environment key light behind the owl keeps it readable on every scene
