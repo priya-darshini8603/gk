@@ -12,7 +12,7 @@ import { n as Root, t as Indicator } from "../_libs/radix-ui__react-progress.mjs
 import { t as Root$1 } from "../_libs/radix-ui__react-label.mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/radix-ui__react-switch.mjs";
 import { a as MediaStreamVideoTrackSource, c as getFirstEncodableVideoCodec, i as MediaStreamAudioTrackSource, n as Mp4OutputFormat, o as BufferTarget, r as WebMOutputFormat, s as getFirstEncodableAudioCodec, t as Output } from "../_libs/mediabunny.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-D0L7A_hB.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-Dv4kd6bX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -2326,42 +2326,69 @@ function fitTextCached(ctx, text, maxW, maxH, startSize, weight = "800", family 
 	return result;
 }
 var layoutCache = null;
+/**
+* MOBILE-SAFE FRAMING
+*
+* The whiteboard is always centered inside this fraction of the frame
+* width (0.62 sits inside the requested 60–70% band, biased toward the
+* lower end for extra margin). That guarantees:
+*   - equal, generous margins on both left and right (never near an edge)
+*   - the board's horizontal center always sits exactly at w/2, so the
+*     countdown "zoom in" effect (which scales from canvas center) zooms
+*     into the board's own center instead of dragging it sideways
+*   - survives reasonably aggressive responsive re-crops without losing
+*     any part of the board
+*/
+var BOARD_WIDTH_FRACTION = .62;
 function computeLayout(w, h) {
 	const key = `${w}x${h}`;
 	if (layoutCache && layoutCache.key === key) return layoutCache.layout;
 	const portrait = h > w;
+	const boardMarginX = .38 / 2;
 	let layout;
 	if (!portrait) {
 		const board = {
-			x: w * .045,
+			x: w * boardMarginX,
 			y: h * .07,
-			w: w * .63,
+			w: w * BOARD_WIDTH_FRACTION,
 			h: h * .82
 		};
 		const pad = board.w * .05;
 		const ow = (board.w - pad * 3) / 2;
 		const oh = board.h * .19;
 		const oy = board.y + board.h * .5;
+		const options = OPTION_KEYS.map((_, i) => ({
+			x: board.x + pad + i % 2 * (ow + pad),
+			y: oy + Math.floor(i / 2) * (oh + board.h * .045),
+			w: ow,
+			h: oh
+		}));
+		const rightMarginW = w - (board.x + board.w);
+		const boardGap = w * .018;
+		const edgeGap = w * .018;
+		const owlWidthCap = h * .368;
+		const owlWidth = Math.max(w * .06, Math.min(rightMarginW - boardGap - edgeGap, owlWidthCap));
+		const owlSize = owlWidth / .8;
+		const owlX = board.x + board.w + boardGap + owlWidth / 2;
+		const buffer = w * .01;
+		const maxLeftTravel = Math.max(0, owlX - (board.x + board.w) - buffer);
+		const owlWalkFrac = Math.min(.12, maxLeftTravel / (1.1 * w));
 		layout = {
 			board,
-			options: OPTION_KEYS.map((_, i) => ({
-				x: board.x + pad + i % 2 * (ow + pad),
-				y: oy + Math.floor(i / 2) * (oh + board.h * .045),
-				w: ow,
-				h: oh
-			})),
+			options,
 			owl: {
-				x: w * .845,
+				x: owlX,
 				y: h * .93,
-				size: h * .46
+				size: owlSize
 			},
+			owlWalkFrac,
 			portrait
 		};
 	} else {
 		const board = {
-			x: w * .05,
+			x: w * boardMarginX,
 			y: h * .06,
-			w: w * .9,
+			w: w * BOARD_WIDTH_FRACTION,
 			h: h * .56
 		};
 		const pad = board.w * .05;
@@ -2381,6 +2408,7 @@ function computeLayout(w, h) {
 				y: h * .97,
 				size: h * .3
 			},
+			owlWalkFrac: .22,
 			portrait
 		};
 	}
@@ -2709,7 +2737,7 @@ function drawFrame(ctx, quiz, s, w, h, runKey = 0) {
 	const scene = getScene(quiz.background);
 	scene.draw(ctx, w, h, t);
 	drawBoard(ctx, quiz, s, l, t, scene.dark);
-	const owlX = l.owl.x + s.owlX * (l.portrait ? w * .22 : w * .12);
+	const owlX = l.owl.x + s.owlX * w * l.owlWalkFrac;
 	ctx.save();
 	ctx.globalAlpha = clamp01$1(s.owlEnter * 1.4);
 	const rim = ctx.createRadialGradient(owlX, l.owl.y - l.owl.size * .45, l.owl.size * .1, owlX, l.owl.y - l.owl.size * .45, l.owl.size * .85);

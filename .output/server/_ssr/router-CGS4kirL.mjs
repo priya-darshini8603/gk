@@ -4,7 +4,7 @@ import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter,
 import { o as require_jsx_runtime } from "../_libs/@radix-ui/react-collection+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BwRWmLTc.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CGS4kirL.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-BToGr02n.css";
@@ -176,7 +176,7 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-D0L7A_hB.mjs");
+var $$splitComponentImporter = () => import("./routes-Dv4kd6bX.mjs");
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Owl Quiz Studio — Kids GK Quiz Video Generator" },
