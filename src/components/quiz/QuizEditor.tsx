@@ -20,15 +20,19 @@ import {
   VOICE_STYLES,
   type AudioSettings,
   type Category,
+  type CharacterId,
   type Difficulty,
   type Language,
   type OptionKey,
   type Quiz,
+  type QuizTypeId,
   type VoiceStyle,
 } from "@/lib/quiz/types";
 import type { Issue } from "@/lib/quiz/validation";
 import type { BackgroundId } from "@/lib/quiz/backgrounds";
 import { BackgroundPicker } from "./BackgroundPicker";
+import { CharacterSelector } from "./CharacterSelector";
+import { QuizTypeSelector } from "./QuizTypeSelector";
 import { AlertTriangle, CircleAlert, Music4, Sparkles } from "lucide-react";
 
 interface Props {
@@ -53,6 +57,16 @@ export function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }: Pro
 
   return (
     <div className="space-y-6">
+      <CharacterSelector
+        value={quiz.character}
+        onChange={(id: CharacterId) => set("character", id)}
+      />
+
+      <QuizTypeSelector
+        value={quiz.quizType}
+        onChange={(id: QuizTypeId) => set("quizType", id)}
+      />
+
       <section className="rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]">
         <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-extrabold text-foreground">
           <Sparkles className="size-5 text-primary" /> Quick presets
@@ -69,6 +83,8 @@ export function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }: Pro
                   language: quiz.language,
                   timer: quiz.timer,
                   background: quiz.background,
+                  character: quiz.character,
+                  quizType: quiz.quizType,
                 })
               }
             >
@@ -215,6 +231,17 @@ export function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }: Pro
             className="rounded-2xl"
           />
         )}
+
+        <div className="flex items-center justify-between rounded-2xl bg-muted px-4 py-3">
+          <Label htmlFor="show-board" className="cursor-pointer">
+            Show board
+          </Label>
+          <Switch
+            id="show-board"
+            checked={quiz.showBoard}
+            onCheckedChange={(v) => set("showBoard", v)}
+          />
+        </div>
       </section>
 
       <section className="space-y-4 rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]">

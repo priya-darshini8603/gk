@@ -1,4 +1,4 @@
-import { DEFAULT_QUIZ, type Quiz } from "./types";
+import { DEFAULT_QUIZ, type CharacterId, type Quiz } from "./types";
 
 export interface CsvQuizRow {
   question: string;
@@ -96,10 +96,11 @@ export function parseQuizCsv(text: string): CsvParseResult {
   return { rows, errors };
 }
 
-export function csvRowToQuiz(row: CsvQuizRow, base: Quiz): Quiz {
+export function csvRowToQuiz(row: CsvQuizRow, base: Quiz, character: CharacterId = base.character): Quiz {
   return {
     ...DEFAULT_QUIZ,
     ...base,
+    character,
     question: row.question,
     options: row.options,
     correct: row.correct,

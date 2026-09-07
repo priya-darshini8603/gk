@@ -38,13 +38,30 @@ export interface RenderProgress {
  * around that. AVC/HEVC -> MP4 (most compatible). VP9/VP8 -> WebM fallback.
  * ------------------------------------------------------------------------- */
 
-const VIDEO_BITRATE = 8_000_000;
+export type VideoQuality = "1080p" | "2k" | "4k";
+
+const VIDEO_QUALITY_CONFIG: Record<VideoQuality, { width: number; bitrate: number }> = {
+  "1080p": { width: 1920, bitrate: 8_000_000 },
+  "2k": { width: 2560, bitrate: 16_000_000 },
+  "4k": { width: 3840, bitrate: 32_000_000 },
+};
 const AUDIO_BITRATE = 160_000;
 
-async function pickCodecs(width: number, height: number) {
+export function getVideoDimensions(quality: VideoQuality, orientation: "landscape" | "portrait") {
+  const { width } = VIDEO_QUALITY_CONFIG[quality];
+  return orientation === "landscape"
+    ? { width, height: (width * 9) / 16 }
+    : { width: (width * 9) / 16, height: width };
+}
+
+export function getVideoBitrate(quality: VideoQuality) {
+  return VIDEO_QUALITY_CONFIG[quality].bitrate;
+}
+
+async function pickCodecs(width: number, height: number, videoBitrate: number) {
   const videoCodec = await getFirstEncodableVideoCodec(
     ["avc", "hevc", "vp9", "vp8"],
-    { width, height, bitrate: VIDEO_BITRATE }
+    { width, height, bitrate: videoBitrate }
   );
 
   if (!videoCodec) {
@@ -115,12 +132,14 @@ export async function renderVideo(
     height: number;
     audio: AudioEngine;
     audioSettings: AudioSettings;
+    videoBitrate?: number;
     onProgress: (progress: RenderProgress) => void;
     signal?: { cancelled: boolean };
   }
 ): Promise<{ blob: Blob; extension: string }> {
   const { quiz, timeline, width, height, audio, audioSettings, onProgress } =
     opts;
+  const videoBitrate = opts.videoBitrate ?? getVideoBitrate("1080p");
 
   /* -----------------------------------------------------------------------
    * PREPARE
@@ -159,7 +178,7 @@ export async function renderVideo(
    * CODEC SELECTION + OUTPUT SETUP
    * --------------------------------------------------------------------- */
 
-  const { videoCodec, audioCodec, useMp4 } = await pickCodecs(width, height);
+  const { videoCodec, audioCodec, useMp4 } = await pickCodecs(width, height, videoBitrate);
 
   console.log("[export] Codecs selected:", { videoCodec, audioCodec, useMp4 });
 
@@ -186,7 +205,7 @@ export async function renderVideo(
 
   const videoSource = new MediaStreamVideoTrackSource(videoTrack, {
     codec: videoCodec,
-    bitrate: VIDEO_BITRATE,
+    bitrate: videoBitrate,
   });
 
   output.addVideoTrack(videoSource, { frameRate: fps });

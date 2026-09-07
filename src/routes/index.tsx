@@ -21,7 +21,14 @@ import { QuizPlayer } from "@/components/quiz/QuizPlayer";
 import { CsvBatchPanel } from "@/components/quiz/CsvBatchPanel";
 import { AudioEngine } from "@/lib/quiz/audio";
 import { buildTimeline } from "@/lib/quiz/timeline";
-import { downloadBlob, renderVideo, type RenderProgress } from "@/lib/quiz/export";
+import {
+  downloadBlob,
+  getVideoBitrate,
+  getVideoDimensions,
+  renderVideo,
+  type RenderProgress,
+  type VideoQuality,
+} from "@/lib/quiz/export";
 import { hasErrors, validateQuiz } from "@/lib/quiz/validation";
 import { DEFAULT_QUIZ, type AudioSettings, type Orientation, type Quiz } from "@/lib/quiz/types";
 
@@ -76,6 +83,7 @@ function Studio() {
   const [quiz, setQuiz] = useState<Quiz>(DEFAULT_QUIZ);
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(DEFAULT_AUDIO);
   const [orientation, setOrientation] = useState<Orientation>("landscape");
+  const [videoQuality, setVideoQuality] = useState<VideoQuality>("1080p");
   const [seed, setSeed] = useState(INITIAL_SEED);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -140,22 +148,24 @@ function Studio() {
     setPlaying(false);
     setProgress({ stage: "Preparing animation...", percent: 0 });
     try {
+      const { width, height } = getVideoDimensions(videoQuality, orientation);
       const { blob, extension } = await renderVideo({
         quiz,
         timeline,
-        width: orientation === "landscape" ? 1920 : 1080,
-        height: orientation === "landscape" ? 1080 : 1920,
+        width,
+        height,
+        videoBitrate: getVideoBitrate(videoQuality),
         audio: audioRef.current,
         audioSettings,
         onProgress: setProgress,
       });
-      downloadBlob(blob, `owl-quiz-${orientation}-1080p.${extension}`);
+      downloadBlob(blob, `owl-quiz-${orientation}-${videoQuality}.${extension}`);
       const hadVoice = audioRef.current.hasNarrationCapture;
       toast.success(
         hadVoice
           ? extension === "mp4"
             ? "Video rendered with narration and downloaded as MP4."
-            : "Video rendered with narration. Your browser exports WebM (1080p) — playable everywhere and convertible to MP4."
+            : `Video rendered with narration. Your browser exports WebM (${videoQuality}) — playable everywhere and convertible to MP4.`
           : "Video rendered, but narration capture wasn't granted — this file has SFX only. Click Render again and allow tab-audio sharing to include the voice.",
       );
     } catch (e) {
@@ -208,6 +218,7 @@ function Studio() {
         <CsvBatchPanel
           baseQuiz={quiz}
           orientation={orientation}
+          videoQuality={videoQuality}
           audio={audioRef.current!}
           audioSettings={audioSettings}
         />
@@ -330,8 +341,22 @@ function Studio() {
 
             <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]">
               <h2 className="font-display text-lg font-extrabold">Export</h2>
+              <label className="block text-sm font-bold" htmlFor="video-quality">
+                Video quality
+              </label>
+              <select
+                id="video-quality"
+                value={videoQuality}
+                disabled={rendering}
+                onChange={(event) => setVideoQuality(event.target.value as VideoQuality)}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm font-semibold"
+              >
+                <option value="1080p">1080p · Full HD</option>
+                <option value="2k">2K · QHD</option>
+                <option value="4k">4K · Ultra HD</option>
+              </select>
               <p className="text-sm text-muted-foreground">
-                {orientation === "landscape" ? "1920 × 1080 · 16:9" : "1080 × 1920 · 9:16"} · 30fps
+                {getVideoDimensions(videoQuality, orientation).width} × {getVideoDimensions(videoQuality, orientation).height} · 30fps
               </p>
               <Button
                 variant="hero"

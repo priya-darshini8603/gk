@@ -1,6 +1,6 @@
-import { drawOwl, poseToLook } from "./owl";
+import { drawCharacter, poseToLook } from "./characters";
 import { getScene } from "./backgrounds";
-import { OPTION_KEYS, type Quiz } from "./types";
+import { OPTION_KEYS, QUIZ_TYPES, type Quiz } from "./types";
 import type { RenderState } from "./timeline";
 
 const TAU = Math.PI * 2;
@@ -75,14 +75,6 @@ function fitText(
   return { size, lines };
 }
 
-/* ---------------------------------------------------------------------------
- * PERF: fitText is deterministic given (text, maxW, maxH, startSize, weight,
- * family) — the font metrics don't depend on animation time. Without this
- * cache, drawFrame() re-ran the whole font-size search + word-wrap loop for
- * the question AND all 4 options on every single rendered frame (up to
- * 30x/sec for the full video length), which was the single biggest cost in
- * export. Same text/box -> same result, so we memoize it.
- * ------------------------------------------------------------------------- */
 const fitTextCache = new Map<string, { size: number; lines: string[] }>();
 
 function fitTextCached(
@@ -112,8 +104,6 @@ interface Layout {
   portrait: boolean;
 }
 
-/* PERF: pure function of (w, h) — cache the last result so we don't
- * reallocate a fresh layout object (and 4 option-rect objects) every frame. */
 let layoutCache: { key: string; layout: Layout } | null = null;
 
 export function computeLayout(w: number, h: number): Layout {
@@ -155,8 +145,6 @@ export function computeLayout(w: number, h: number): Layout {
   return layout;
 }
 
-/* -------------------------------- scene --------------------------------- */
-
 function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -169,20 +157,6 @@ function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number
   ctx.fill();
 }
 
-/* ---------------------------------------------------------------------------
- * PERF: static board background cache.
- *
- * The white card, its drop shadow, the purple border, the header ribbon
- * gradient, and the "GK QUIZ" label never change once the layout (w, h) and
- * `needsScrim` flag are fixed for a render — but the original code redrew
- * all of it, including a `ctx.shadowBlur` fill, on every single frame.
- * shadowBlur is one of the most expensive Canvas2D operations, and here it
- * was being paid 30x/sec for a shape that's static for the whole video.
- *
- * We now render this once to an offscreen canvas (padded so the blurred
- * shadow isn't clipped) and just `drawImage` it every frame — a cheap
- * bitmap blit instead of a shadowed fill + gradient + text layout.
- * ------------------------------------------------------------------------- */
 interface CachedBoardBg {
   key: string;
   canvas: HTMLCanvasElement;
@@ -192,9 +166,11 @@ interface CachedBoardBg {
 
 let boardBgCache: CachedBoardBg | null = null;
 
-function getBoardBackground(l: Layout, needsScrim: boolean): CachedBoardBg {
+function getBoardBackground(l: Layout, needsScrim: boolean, heading: string): CachedBoardBg {
   const b = l.board;
-  const key = `${b.x}|${b.y}|${b.w}|${b.h}|${needsScrim}`;
+  // Heading is now part of the cache key: changing quiz type invalidates
+  // the cached bitmap immediately instead of showing a stale label.
+  const key = `${b.x}|${b.y}|${b.w}|${b.h}|${needsScrim}|${heading}`;
 
   if (boardBgCache && boardBgCache.key === key) return boardBgCache;
 
@@ -242,11 +218,31 @@ function getBoardBackground(l: Layout, needsScrim: boolean): CachedBoardBg {
   c.fillStyle = "#ffffff";
   c.textAlign = "center";
   c.textBaseline = "middle";
-  c.font = `800 ${hh * 0.52}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
-  c.fillText("GK QUIZ", b.w * 0.5, hh * 0.08);
+  // Heading is prominent but capped/fit within the ribbon so it never
+  // overpowers the question card below it.
+  const { size } = fitTextCached(c, heading, b.w * 0.8, hh * 0.62, hh * 0.52);
+  c.font = `800 ${size}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
+  c.fillText(heading, b.w * 0.5, hh * 0.08);
 
   boardBgCache = { key, canvas, padX, padY };
   return boardBgCache;
+}
+
+function drawHeadingRibbon(ctx: CanvasRenderingContext2D, b: Layout["board"], heading: string) {
+  const hh = b.h * 0.13;
+  const hg = ctx.createLinearGradient(b.x + b.w * 0.06, b.y - hh * 0.42, b.x + b.w * 0.94, b.y + hh * 0.58);
+  hg.addColorStop(0, "#132a5c");
+  hg.addColorStop(1, "#0b1a3d");
+  ctx.fillStyle = hg;
+  roundRect(ctx, b.x + b.w * 0.06, b.y - hh * 0.42, b.w * 0.88, hh, hh * 0.5);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const { size } = fitTextCached(ctx, heading, b.w * 0.8, hh * 0.62, hh * 0.52);
+  ctx.font = `800 ${size}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
+  ctx.fillText(heading, b.x + b.w * 0.5, b.y + hh * 0.08);
 }
 
 function drawBoard(
@@ -264,12 +260,14 @@ function drawBoard(
   ctx.globalAlpha = Math.min(1, inP * 1.5);
   ctx.translate(0, yOff);
 
-  // PERF: one cheap bitmap blit instead of shadowed fill + gradient + text
-  // layout every frame.
-  const bg = getBoardBackground(l, needsScrim);
-  ctx.drawImage(bg.canvas, b.x - bg.padX, b.y - bg.padY);
+  const heading = QUIZ_TYPES.find((q) => q.id === quiz.quizType)?.heading ?? "GK QUIZ";
+  if (quiz.showBoard !== false) {
+    const bg = getBoardBackground(l, needsScrim, heading);
+    ctx.drawImage(bg.canvas, b.x - bg.padX, b.y - bg.padY);
+  } else {
+    drawHeadingRibbon(ctx, b, heading);
+  }
 
-  // question
   const qArea = { x: b.x + b.w * 0.06, y: b.y + b.h * 0.16, w: b.w * 0.88, h: b.h * 0.28 };
   const qIn = clamp01(s.questionIn);
   if (qIn > 0) {
@@ -290,7 +288,6 @@ function drawBoard(
     ctx.restore();
   }
 
-  // options
   OPTION_KEYS.forEach((key, i) => {
     const o = l.options[i]!;
     const p = clamp01(s.optionsIn[i]!);
@@ -306,9 +303,6 @@ function drawBoard(
     ctx.scale(scale, scale);
     ctx.translate(-(o.x + o.w / 2), -(o.y + o.h / 2));
 
-    // PERF: shadowBlur is only ever active while a specific option is
-    // highlighted/correct, so this stays off (and cheap) for the vast
-    // majority of the video's frames.
     if (glow > 0 || (revealed && isCorrect)) {
       ctx.shadowColor = revealed && isCorrect ? "rgba(48,209,88,0.95)" : "rgba(255,209,102,0.95)";
       ctx.shadowBlur = o.h * (0.35 + glow * 0.35);
@@ -326,7 +320,6 @@ function drawBoard(
     roundRect(ctx, o.x, o.y, o.w, o.h, o.h * 0.32);
     ctx.stroke();
 
-    // letter badge
     const br = o.h * 0.3;
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.beginPath();
@@ -338,7 +331,6 @@ function drawBoard(
     ctx.font = `800 ${br * 1.05}px 'Baloo 2', system-ui, sans-serif`;
     ctx.fillText(key, o.x + o.h * 0.42, o.y + o.h / 2 + br * 0.04);
 
-    // label
     const tx = o.x + o.h * 0.82;
     const tw = o.w - o.h * 1.15 - (revealed && isCorrect ? o.h * 0.5 : 0);
     ctx.save();
@@ -488,9 +480,10 @@ function drawThoughtBubble(ctx: CanvasRenderingContext2D, x: number, y: number, 
 
 let litCanvas: HTMLCanvasElement | null = null;
 
-/** Draw the owl, then wash it with the scene's light colour so it sits in the world. */
-function drawOwlLit(
+/** Draw the selected character, then wash it with the scene's light colour so it sits in the world. */
+function drawCharacterLit(
   ctx: CanvasRenderingContext2D,
+  characterId: Quiz["character"],
   x: number,
   y: number,
   size: number,
@@ -501,7 +494,7 @@ function drawOwlLit(
   h: number,
 ) {
   if (tintAlpha <= 0 || typeof document === "undefined") {
-    drawOwl(ctx, x, y, size, look);
+    drawCharacter(ctx, characterId, x, y, size, look);
     return;
   }
   if (!litCanvas) litCanvas = document.createElement("canvas");
@@ -511,13 +504,13 @@ function drawOwlLit(
   }
   const lc = litCanvas.getContext("2d");
   if (!lc) {
-    drawOwl(ctx, x, y, size, look);
+    drawCharacter(ctx, characterId, x, y, size, look);
     return;
   }
   lc.setTransform(1, 0, 0, 1, 0, 0);
   lc.clearRect(0, 0, w, h);
   lc.globalCompositeOperation = "source-over";
-  drawOwl(lc, x, y, size, look);
+  drawCharacter(lc, characterId, x, y, size, look);
   lc.globalCompositeOperation = "source-atop";
   lc.globalAlpha = tintAlpha;
   lc.fillStyle = tint;
@@ -549,15 +542,14 @@ export function drawFrame(
   scene.draw(ctx, w, h, t);
   drawBoard(ctx, quiz, s, l, t, scene.dark);
 
-  const owlX = l.owl.x + s.owlX * (l.portrait ? w * 0.22 : w * 0.12);
+  const charX = l.owl.x + s.owlX * (l.portrait ? w * 0.22 : w * 0.12);
   ctx.save();
   ctx.globalAlpha = clamp01(s.owlEnter * 1.4);
-  // environment key light behind the owl keeps it readable on every scene
   const rim = ctx.createRadialGradient(
-    owlX,
+    charX,
     l.owl.y - l.owl.size * 0.45,
     l.owl.size * 0.1,
-    owlX,
+    charX,
     l.owl.y - l.owl.size * 0.45,
     l.owl.size * 0.85,
   );
@@ -567,14 +559,25 @@ export function drawFrame(
   ctx.globalAlpha *= scene.light.rimAlpha;
   ctx.fillStyle = rim;
   ctx.beginPath();
-  ctx.arc(owlX, l.owl.y - l.owl.size * 0.45, l.owl.size * 0.85, 0, TAU);
+  ctx.arc(charX, l.owl.y - l.owl.size * 0.45, l.owl.size * 0.85, 0, TAU);
   ctx.fill();
   ctx.restore();
-  drawOwlLit(ctx, owlX, l.owl.y, l.owl.size, poseToLook(s, t), scene.light.tint, scene.light.tintAlpha, w, h);
+  drawCharacterLit(
+    ctx,
+    quiz.character,
+    charX,
+    l.owl.y,
+    l.owl.size,
+    poseToLook(s, t),
+    scene.light.tint,
+    scene.light.tintAlpha,
+    w,
+    h,
+  );
   ctx.restore();
 
   if (s.pose === "think" || s.reaction === "thinking") {
-    drawThoughtBubble(ctx, owlX - l.owl.size * 0.42, l.owl.y - l.owl.size * 1.05, l.owl.size * 0.11, t);
+    drawThoughtBubble(ctx, charX - l.owl.size * 0.42, l.owl.y - l.owl.size * 1.05, l.owl.size * 0.11, t);
   }
 
   drawCountdown(ctx, s, w, h, l);

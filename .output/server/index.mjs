@@ -16,27 +16,6 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/favicon.ico": {
-		"type": "image/vnd.microsoft.icon",
-		"etag": "\"4f95-3RXc3p2mhEAs1WBwaIvE0Y0uu0Y\"",
-		"mtime": "2026-08-20T10:47:11.203Z",
-		"size": 20373,
-		"path": "../public/favicon.ico"
-	},
-	"/assets/index-BUAyiXyg.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"54b30-2gzGWkvwjOnOkQDEIOPbce8Q1io\"",
-		"mtime": "2026-09-04T13:19:28.016Z",
-		"size": 346928,
-		"path": "../public/assets/index-BUAyiXyg.js"
-	},
-	"/assets/styles-BToGr02n.css": {
-		"type": "text/css; charset=utf-8",
-		"etag": "\"130a7-/HWdP8VO5+L4eW1k04kCj+67uZ8\"",
-		"mtime": "2026-09-04T13:19:28.018Z",
-		"size": 77991,
-		"path": "../public/assets/styles-BToGr02n.css"
-	},
 	"/robots.txt": {
 		"type": "text/plain; charset=utf-8",
 		"etag": "\"a0-CKGXSIe7TSsqDTmGm/nY1t/o5d0\"",
@@ -44,12 +23,19 @@ var public_assets_data_default = {
 		"size": 160,
 		"path": "../public/robots.txt"
 	},
-	"/assets/routes-pOT5fN7v.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"7a020-u3m3Of5vzdT+9OHgI0SYFZaJox4\"",
-		"mtime": "2026-09-04T13:19:28.017Z",
-		"size": 499744,
-		"path": "../public/assets/routes-pOT5fN7v.js"
+	"/favicon.ico": {
+		"type": "image/vnd.microsoft.icon",
+		"etag": "\"4f95-3RXc3p2mhEAs1WBwaIvE0Y0uu0Y\"",
+		"mtime": "2026-08-20T10:47:11.203Z",
+		"size": 20373,
+		"path": "../public/favicon.ico"
+	},
+	"/assets/styles-CY6Hesvc.css": {
+		"type": "text/css; charset=utf-8",
+		"etag": "\"13243-ZBlt/zT/j5vkwTXnFfkDj0wqUyY\"",
+		"mtime": "2026-09-07T13:39:40.502Z",
+		"size": 78403,
+		"path": "../public/assets/styles-CY6Hesvc.css"
 	},
 	"/mespeak/voices/en-us.json": {
 		"type": "application/json",
@@ -64,6 +50,13 @@ var public_assets_data_default = {
 		"mtime": "2026-08-23T18:14:42.524Z",
 		"size": 570486,
 		"path": "../public/mespeak/mespeak_config.json"
+	},
+	"/assets/index-Cg6DnaxP.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"db9e6-rELRxHaggeIKVAZ8uaWlRx6ssYo\"",
+		"mtime": "2026-09-07T13:39:40.501Z",
+		"size": 899558,
+		"path": "../public/assets/index-Cg6DnaxP.js"
 	},
 	"/mespeak/mespeak.js": {
 		"type": "text/javascript; charset=utf-8",
@@ -81,47 +74,6 @@ function isPublicAssetURL(id = "") {
 	for (const base in publicAssetBases) if (id.startsWith(base)) return true;
 	return false;
 }
-//#endregion
-//#region node_modules/nitro/dist/runtime/internal/route-rules.mjs
-var headers = ((m) => function headersRouteRule(event) {
-	for (const [key, value] of Object.entries(m.options || {})) event.res.headers.set(key, value);
-});
-//#endregion
-//#region #nitro/virtual/routing
-var findRouteRules = /* @__PURE__ */ (() => {
-	const $0 = [{
-		name: "headers",
-		route: "/assets/**",
-		handler: headers,
-		options: { "cache-control": "public, max-age=31536000, immutable" }
-	}];
-	return (m, p) => {
-		let r = [];
-		if (p.charCodeAt(p.length - 1) === 47) p = p.slice(0, -1) || "/";
-		let s = p.split("/");
-		if (s.length > 1) {
-			if (s[1] === "assets") r.unshift({
-				data: $0,
-				params: { "_": s.slice(2).join("/") }
-			});
-		}
-		return r;
-	};
-})();
-var _lazy_mDtr61 = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
-var findRoute = /* @__PURE__ */ (() => {
-	const data = {
-		route: "/**",
-		handler: _lazy_mDtr61
-	};
-	return ((_m, p) => {
-		return {
-			data,
-			params: { "_": p.slice(1) }
-		};
-	});
-})();
-[].filter(Boolean);
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/error/prod.mjs
 var errorHandler = (error, event) => {
@@ -213,21 +165,6 @@ function createH3App(config) {
 }
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/app.mjs
-var APP_ID = "default";
-function useNitroApp() {
-	let instance = useNitroApp._instance;
-	if (instance) return instance;
-	instance = useNitroApp._instance = createNitroApp();
-	globalThis.__nitro__ = globalThis.__nitro__ || {};
-	globalThis.__nitro__[APP_ID] = instance;
-	return instance;
-}
-function useNitroHooks() {
-	const nitroApp = useNitroApp();
-	const hooks = nitroApp.hooks;
-	if (hooks) return hooks;
-	return nitroApp.hooks = new HookableCore();
-}
 function getRouteRules(method, pathname) {
 	const m = findRouteRules(method, pathname);
 	if (!m?.length) return { routeRuleMiddleware: [] };
@@ -264,6 +201,64 @@ function getRouteRules(method, pathname) {
 		routeRules,
 		routeRuleMiddleware: middleware
 	};
+}
+//#endregion
+//#region node_modules/nitro/dist/runtime/internal/route-rules.mjs
+var headers = ((m) => function headersRouteRule(event) {
+	for (const [key, value] of Object.entries(m.options || {})) event.res.headers.set(key, value);
+});
+//#endregion
+//#region #nitro/virtual/routing
+var findRouteRules = /* @__PURE__ */ (() => {
+	const $0 = [{
+		name: "headers",
+		route: "/assets/**",
+		handler: headers,
+		options: { "cache-control": "public, max-age=31536000, immutable" }
+	}];
+	return (m, p) => {
+		let r = [];
+		if (p.charCodeAt(p.length - 1) === 47) p = p.slice(0, -1) || "/";
+		let s = p.split("/");
+		if (s.length > 1) {
+			if (s[1] === "assets") r.unshift({
+				data: $0,
+				params: { "_": s.slice(2).join("/") }
+			});
+		}
+		return r;
+	};
+})();
+var _lazy_mDtr61 = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+var findRoute = /* @__PURE__ */ (() => {
+	const data = {
+		route: "/**",
+		handler: _lazy_mDtr61
+	};
+	return ((_m, p) => {
+		return {
+			data,
+			params: { "_": p.slice(1) }
+		};
+	});
+})();
+[].filter(Boolean);
+//#endregion
+//#region node_modules/nitro/dist/runtime/internal/app.mjs
+var APP_ID = "default";
+function useNitroApp() {
+	let instance = useNitroApp._instance;
+	if (instance) return instance;
+	instance = useNitroApp._instance = createNitroApp();
+	globalThis.__nitro__ = globalThis.__nitro__ || {};
+	globalThis.__nitro__[APP_ID] = instance;
+	return instance;
+}
+function useNitroHooks() {
+	const nitroApp = useNitroApp();
+	const hooks = nitroApp.hooks;
+	if (hooks) return hooks;
+	return nitroApp.hooks = new HookableCore();
 }
 //#endregion
 //#region node_modules/nitro/dist/presets/cloudflare/runtime/_module-handler.mjs

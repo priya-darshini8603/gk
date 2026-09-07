@@ -1,7 +1,10 @@
 import { n as __toESM } from "../_runtime.mjs";
 import { i as performance_default } from "../_libs/h3-v2+rou3+srvx+unenv.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
+import { c as HeadContent, d as Outlet, f as createFileRoute, h as useRouter, m as Link, p as createRootRouteWithContext, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { o as require_jsx_runtime, r as Slot } from "../_libs/@radix-ui/react-collection+[...].mjs";
+import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
+import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { n as toast, t as Toaster } from "../_libs/sonner.mjs";
 import { _ as Download, a as Upload, b as ChevronDown, c as RotateCcw, d as Pause, f as Music4, g as FileSpreadsheet, h as Images, i as Volume2, l as Play, m as LoaderCircle, n as WandSparkles, o as TriangleAlert, p as Maximize2, r as VolumeX, s as Sparkles, t as X, u as Pencil, v as CircleAlert, x as Check, y as ChevronUp } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
@@ -12,9 +15,178 @@ import { n as Root, t as Indicator } from "../_libs/radix-ui__react-progress.mjs
 import { t as Root$1 } from "../_libs/radix-ui__react-label.mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/radix-ui__react-switch.mjs";
 import { a as MediaStreamVideoTrackSource, c as getFirstEncodableVideoCodec, i as MediaStreamAudioTrackSource, n as Mp4OutputFormat, o as BufferTarget, r as WebMOutputFormat, s as getFirstEncodableAudioCodec, t as Output } from "../_libs/mediabunny.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-D0L7A_hB.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-IVJerbvX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
+var styles_default = "/assets/styles-CY6Hesvc.css";
+function reportLovableError(error, context = {}) {
+	if (typeof window === "undefined") return;
+	window.__lovableEvents?.captureException?.(error, {
+		source: "react_error_boundary",
+		route: window.location.pathname,
+		...context
+	}, {
+		mechanism: "react_error_boundary",
+		handled: false,
+		severity: "error"
+	});
+	const message = error instanceof Response ? `Response ${error.status}${error.url ? ` at ${error.url}` : ""}` : error instanceof Error ? error.message : String(error);
+	const stack = error instanceof Error ? error.stack : void 0;
+	window.__lovableReportRuntimeError?.({
+		message,
+		...stack !== void 0 && { stack },
+		filename: window.location.pathname
+	});
+}
+function NotFoundComponent() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "flex min-h-screen items-center justify-center bg-background px-4",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md text-center",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+					className: "text-7xl font-bold text-foreground",
+					children: "404"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+					className: "mt-4 text-xl font-semibold text-foreground",
+					children: "Page not found"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mt-2 text-sm text-muted-foreground",
+					children: "The page you're looking for doesn't exist or has been moved."
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-6",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/",
+						className: "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+						children: "Go home"
+					})
+				})
+			]
+		})
+	});
+}
+function ErrorComponent({ error, reset }) {
+	console.error(error);
+	const router = useRouter();
+	(0, import_react.useEffect)(() => {
+		reportLovableError(error, { boundary: "tanstack_root_error_component" });
+	}, [error]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "flex min-h-screen items-center justify-center bg-background px-4",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md text-center",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+					className: "text-xl font-semibold tracking-tight text-foreground",
+					children: "This page didn't load"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mt-2 text-sm text-muted-foreground",
+					children: "Something went wrong on our end. You can try refreshing or head back home."
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 flex flex-wrap justify-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: () => {
+							router.invalidate();
+							reset();
+						},
+						className: "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+						children: "Try again"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+						href: "/",
+						className: "inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent",
+						children: "Go home"
+					})]
+				})
+			]
+		})
+	});
+}
+var Route$1 = createRootRouteWithContext()({
+	head: () => ({
+		meta: [
+			{ charSet: "utf-8" },
+			{
+				name: "viewport",
+				content: "width=device-width, initial-scale=1"
+			},
+			{ title: "Lovable App" },
+			{
+				name: "description",
+				content: "Lovable Generated Project"
+			},
+			{
+				name: "author",
+				content: "Lovable"
+			},
+			{
+				property: "og:title",
+				content: "Lovable App"
+			},
+			{
+				property: "og:description",
+				content: "Lovable Generated Project"
+			},
+			{
+				property: "og:type",
+				content: "website"
+			},
+			{
+				name: "twitter:card",
+				content: "summary_large_image"
+			},
+			{
+				name: "twitter:site",
+				content: "@Lovable"
+			}
+		],
+		links: [
+			{
+				rel: "stylesheet",
+				href: styles_default
+			},
+			{
+				rel: "preconnect",
+				href: "https://fonts.googleapis.com"
+			},
+			{
+				rel: "preconnect",
+				href: "https://fonts.gstatic.com",
+				crossOrigin: "anonymous"
+			},
+			{
+				rel: "stylesheet",
+				href: "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+			},
+			{
+				rel: "icon",
+				href: "/favicon.ico",
+				type: "image/x-icon"
+			}
+		]
+	}),
+	shellComponent: RootShell,
+	component: RootComponent,
+	notFoundComponent: NotFoundComponent,
+	errorComponent: ErrorComponent
+});
+function RootShell({ children }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("html", {
+		lang: "en",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("head", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", { children: [children, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scripts, {})] })]
+	});
+}
+function RootComponent() {
+	const { queryClient } = Route$1.useRouteContext();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QueryClientProvider, {
+		client: queryClient,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
+	});
+}
 function cn(...inputs) {
 	return twMerge(clsx(inputs));
 }
@@ -186,7 +358,7 @@ SelectSeparator.displayName = SelectSeparator$1.displayName;
 * Every scene is procedurally painted on canvas so it works identically in the
 * live preview and in the 1080p video export.
 */
-var TAU$2 = Math.PI * 2;
+var TAU$3 = Math.PI * 2;
 function sky(ctx, w, h, stops) {
 	const g = ctx.createLinearGradient(0, 0, 0, h);
 	stops.forEach(([p, c]) => g.addColorStop(p, c));
@@ -199,7 +371,7 @@ function glow(ctx, x, y, r, color) {
 	g.addColorStop(1, "rgba(255,255,255,0)");
 	ctx.fillStyle = g;
 	ctx.beginPath();
-	ctx.arc(x, y, r, 0, TAU$2);
+	ctx.arc(x, y, r, 0, TAU$3);
 	ctx.fill();
 }
 function ground(ctx, w, h, top, bottom, y = .78) {
@@ -218,7 +390,7 @@ function ground(ctx, w, h, top, bottom, y = .78) {
 	ctx.fillStyle = "rgba(255,255,255,0.12)";
 	for (let i = 0; i < 8; i++) {
 		ctx.beginPath();
-		ctx.ellipse(w * (.06 + i * .13), h * (y + .08 + i % 2 * .06), w * .05, h * .012, 0, 0, TAU$2);
+		ctx.ellipse(w * (.06 + i * .13), h * (y + .08 + i % 2 * .06), w * .05, h * .012, 0, 0, TAU$3);
 		ctx.fill();
 	}
 }
@@ -227,7 +399,7 @@ function star(ctx, x, y, r, color) {
 	ctx.beginPath();
 	for (let i = 0; i < 10; i++) {
 		const rad = i % 2 === 0 ? r : r * .45;
-		const a = i / 10 * TAU$2 - Math.PI / 2;
+		const a = i / 10 * TAU$3 - Math.PI / 2;
 		ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
 	}
 	ctx.closePath();
@@ -271,7 +443,7 @@ function puff(ctx, cx, cy, s, fill) {
 		]
 	].forEach(([dx, dy, r]) => {
 		ctx.beginPath();
-		ctx.arc(cx + dx * s, cy + dy * s, r * s, 0, TAU$2);
+		ctx.arc(cx + dx * s, cy + dy * s, r * s, 0, TAU$3);
 		ctx.fill();
 	});
 }
@@ -290,7 +462,7 @@ function tree(ctx, x, baseY, s, leaf, dark, sway) {
 	const blob = (dx, dy, r, c) => {
 		ctx.fillStyle = c;
 		ctx.beginPath();
-		ctx.arc(dx * s, -s * .55 + dy * s, r * s, 0, TAU$2);
+		ctx.arc(dx * s, -s * .55 + dy * s, r * s, 0, TAU$3);
 		ctx.fill();
 	};
 	blob(0, -.18, .34, dark);
@@ -312,14 +484,14 @@ function flower(ctx, x, y, s, color, sway) {
 	ctx.stroke();
 	ctx.fillStyle = color;
 	for (let i = 0; i < 5; i++) {
-		const a = i / 5 * TAU$2;
+		const a = i / 5 * TAU$3;
 		ctx.beginPath();
-		ctx.arc(Math.cos(a) * s * .38, -s * 1.1 + Math.sin(a) * s * .38, s * .3, 0, TAU$2);
+		ctx.arc(Math.cos(a) * s * .38, -s * 1.1 + Math.sin(a) * s * .38, s * .3, 0, TAU$3);
 		ctx.fill();
 	}
 	ctx.fillStyle = "#ffd166";
 	ctx.beginPath();
-	ctx.arc(0, -s * 1.1, s * .24, 0, TAU$2);
+	ctx.arc(0, -s * 1.1, s * .24, 0, TAU$3);
 	ctx.fill();
 	ctx.restore();
 }
@@ -338,10 +510,10 @@ function butterflies(ctx, w, h, t, n = 4) {
 		ctx.save();
 		ctx.translate(x, y);
 		ctx.beginPath();
-		ctx.ellipse(-h * .012, 0, h * .012 * (.4 + flap), h * .014, -.4, 0, TAU$2);
+		ctx.ellipse(-h * .012, 0, h * .012 * (.4 + flap), h * .014, -.4, 0, TAU$3);
 		ctx.fill();
 		ctx.beginPath();
-		ctx.ellipse(h * .012, 0, h * .012 * (.4 + flap), h * .014, .4, 0, TAU$2);
+		ctx.ellipse(h * .012, 0, h * .012 * (.4 + flap), h * .014, .4, 0, TAU$3);
 		ctx.fill();
 		ctx.restore();
 	}
@@ -356,7 +528,7 @@ function bubbles(ctx, w, h, t, n = 18) {
 		ctx.strokeStyle = "rgba(255,255,255,0.55)";
 		ctx.lineWidth = r * .28;
 		ctx.beginPath();
-		ctx.arc(x, y, r, 0, TAU$2);
+		ctx.arc(x, y, r, 0, TAU$3);
 		ctx.stroke();
 		ctx.fillStyle = "rgba(255,255,255,0.16)";
 		ctx.fill();
@@ -381,7 +553,7 @@ function fish(ctx, w, h, t, n = 5) {
 		ctx.scale(dir, 1);
 		ctx.fillStyle = colors[i % colors.length];
 		ctx.beginPath();
-		ctx.ellipse(0, 0, s, s * .6, 0, 0, TAU$2);
+		ctx.ellipse(0, 0, s, s * .6, 0, 0, TAU$3);
 		ctx.fill();
 		ctx.beginPath();
 		ctx.moveTo(-s, 0);
@@ -391,7 +563,7 @@ function fish(ctx, w, h, t, n = 5) {
 		ctx.fill();
 		ctx.fillStyle = "#2b1f4a";
 		ctx.beginPath();
-		ctx.arc(s * .45, -s * .12, s * .11, 0, TAU$2);
+		ctx.arc(s * .45, -s * .12, s * .11, 0, TAU$3);
 		ctx.fill();
 		ctx.restore();
 	}
@@ -423,7 +595,7 @@ function coral(ctx, w, h) {
 		ctx.fillStyle = colors[i % 3];
 		for (let k = -1; k <= 1; k++) {
 			ctx.beginPath();
-			ctx.ellipse(x + k * w * .018, h * .97, w * .012, h * (.05 + i % 2 * .02), k * .35, 0, TAU$2);
+			ctx.ellipse(x + k * w * .018, h * .97, w * .012, h * (.05 + i % 2 * .02), k * .35, 0, TAU$3);
 			ctx.fill();
 		}
 	}
@@ -446,7 +618,7 @@ function snowfall(ctx, w, h, t, n = 60) {
 		const x = i * 37 % 100 / 100 * w + Math.sin(t * .8 + i) * w * .02;
 		const y = (t * (.04 + i % 5 * .012) + i * .07) % 1.1 * h;
 		ctx.beginPath();
-		ctx.arc(x, y, h * (.003 + i % 3 * .002), 0, TAU$2);
+		ctx.arc(x, y, h * (.003 + i % 3 * .002), 0, TAU$3);
 		ctx.fill();
 	}
 }
@@ -493,7 +665,7 @@ function rainbowArc(ctx, w, h, alpha = .75) {
 	colors.forEach((c, i) => {
 		ctx.strokeStyle = c;
 		ctx.beginPath();
-		ctx.arc(w * .5, h * .92, h * (.52 - i * .03), Math.PI, TAU$2);
+		ctx.arc(w * .5, h * .92, h * (.52 - i * .03), Math.PI, TAU$3);
 		ctx.stroke();
 	});
 	ctx.restore();
@@ -504,7 +676,7 @@ function planet(ctx, x, y, r, c1, c2, ring = false) {
 	g.addColorStop(1, c2);
 	ctx.fillStyle = g;
 	ctx.beginPath();
-	ctx.arc(x, y, r, 0, TAU$2);
+	ctx.arc(x, y, r, 0, TAU$3);
 	ctx.fill();
 	if (ring) {
 		ctx.save();
@@ -513,7 +685,7 @@ function planet(ctx, x, y, r, c1, c2, ring = false) {
 		ctx.strokeStyle = "rgba(255,220,150,0.8)";
 		ctx.lineWidth = r * .14;
 		ctx.beginPath();
-		ctx.ellipse(0, 0, r * 1.7, r * .5, 0, 0, TAU$2);
+		ctx.ellipse(0, 0, r * 1.7, r * .5, 0, 0, TAU$3);
 		ctx.stroke();
 		ctx.restore();
 	}
@@ -522,7 +694,7 @@ function moon(ctx, x, y, r) {
 	glow(ctx, x, y, r * 3, "rgba(255,247,214,0.35)");
 	ctx.fillStyle = "#fff6d6";
 	ctx.beginPath();
-	ctx.arc(x, y, r, 0, TAU$2);
+	ctx.arc(x, y, r, 0, TAU$3);
 	ctx.fill();
 	ctx.fillStyle = "rgba(226,214,178,0.75)";
 	[
@@ -543,7 +715,7 @@ function moon(ctx, x, y, r) {
 		]
 	].forEach(([dx, dy, rr]) => {
 		ctx.beginPath();
-		ctx.arc(x + dx * r, y + dy * r, rr * r, 0, TAU$2);
+		ctx.arc(x + dx * r, y + dy * r, rr * r, 0, TAU$3);
 		ctx.fill();
 	});
 }
@@ -588,7 +760,7 @@ function balloons(ctx, w, h, t, n = 5) {
 		const r = h * .035;
 		ctx.fillStyle = colors[i % colors.length];
 		ctx.beginPath();
-		ctx.ellipse(x, y, r * .82, r, 0, 0, TAU$2);
+		ctx.ellipse(x, y, r * .82, r, 0, 0, TAU$3);
 		ctx.fill();
 		ctx.strokeStyle = "rgba(255,255,255,0.6)";
 		ctx.lineWidth = h * .003;
@@ -601,7 +773,7 @@ function balloons(ctx, w, h, t, n = 5) {
 function floatingIsland(ctx, x, y, s) {
 	ctx.fillStyle = "#8ce99a";
 	ctx.beginPath();
-	ctx.ellipse(x, y, s, s * .34, 0, 0, TAU$2);
+	ctx.ellipse(x, y, s, s * .34, 0, 0, TAU$3);
 	ctx.fill();
 	ctx.fillStyle = "#a07555";
 	ctx.beginPath();
@@ -692,7 +864,7 @@ var SCENES = [
 			ctx.translate(rx, h * .42 + Math.sin(t) * h * .01);
 			ctx.fillStyle = "#f4f6ff";
 			ctx.beginPath();
-			ctx.ellipse(0, 0, h * .035, h * .016, 0, 0, TAU$2);
+			ctx.ellipse(0, 0, h * .035, h * .016, 0, 0, TAU$3);
 			ctx.fill();
 			ctx.fillStyle = "#ff5c7a";
 			ctx.beginPath();
@@ -772,7 +944,7 @@ var SCENES = [
 			ctx.fillStyle = "#8a8177";
 			for (let i = 0; i < 5; i++) {
 				ctx.beginPath();
-				ctx.ellipse(w * (.08 + i * .22), h * (.92 + i % 2 * .04), w * .022, h * .018, 0, 0, TAU$2);
+				ctx.ellipse(w * (.08 + i * .22), h * (.92 + i % 2 * .04), w * .022, h * .018, 0, 0, TAU$3);
 				ctx.fill();
 			}
 		}
@@ -962,13 +1134,13 @@ var SCENES = [
 				ctx.save();
 				ctx.rotate(i / 3 * Math.PI + t * .3);
 				ctx.beginPath();
-				ctx.ellipse(0, 0, h * .09, h * .032, 0, 0, TAU$2);
+				ctx.ellipse(0, 0, h * .09, h * .032, 0, 0, TAU$3);
 				ctx.stroke();
 				ctx.restore();
 			}
 			ctx.fillStyle = "#ff5c7a";
 			ctx.beginPath();
-			ctx.arc(0, 0, h * .018, 0, TAU$2);
+			ctx.arc(0, 0, h * .018, 0, TAU$3);
 			ctx.fill();
 			ctx.restore();
 			const bench = h * .78;
@@ -980,7 +1152,7 @@ var SCENES = [
 				for (let i = 0; i < 3; i++) {
 					ctx.fillStyle = "rgba(255,255,255,0.7)";
 					ctx.beginPath();
-					ctx.arc(x + w * .012 + i * w * .014, bench - h * .075 * sc + (t * .3 + i * .3) % 1 * -h * .05, h * .005, 0, TAU$2);
+					ctx.arc(x + w * .012 + i * w * .014, bench - h * .075 * sc + (t * .3 + i * .3) % 1 * -h * .05, h * .005, 0, TAU$3);
 					ctx.fill();
 				}
 			};
@@ -1023,7 +1195,7 @@ var SCENES = [
 				}
 				ctx.fillStyle = "rgba(255,255,255,0.85)";
 				ctx.beginPath();
-				ctx.ellipse(x, h * .82 - s * .58, s * .09, s * .03, 0, 0, TAU$2);
+				ctx.ellipse(x, h * .82 - s * .58, s * .09, s * .03, 0, 0, TAU$3);
 				ctx.fill();
 			}
 			snowfall(ctx, w, h, t);
@@ -1069,7 +1241,7 @@ var SCENES = [
 				ctx.quadraticCurveTo(s * .1, -s * .5, 0, -s);
 				ctx.stroke();
 				for (let k = 0; k < 6; k++) {
-					const a = k / 6 * TAU$2;
+					const a = k / 6 * TAU$3;
 					ctx.strokeStyle = k % 2 ? "#3aa869" : "#2f8f55";
 					ctx.lineWidth = s * .06;
 					ctx.beginPath();
@@ -1116,7 +1288,7 @@ var SCENES = [
 				const p = (t * .5 + i * .13) % 1;
 				ctx.fillStyle = `rgba(255,${140 + i * 8},80,${.9 - p * .9})`;
 				ctx.beginPath();
-				ctx.arc(w * (.5 + Math.sin(i * 2) * .05 * p * 2), h * (.3 - p * .18), h * .008, 0, TAU$2);
+				ctx.arc(w * (.5 + Math.sin(i * 2) * .05 * p * 2), h * (.3 - p * .18), h * .008, 0, TAU$3);
 				ctx.fill();
 			}
 			for (let i = 0; i < 4; i++) puff(ctx, w * .5 + Math.sin(t * .5 + i) * w * .03, h * (.24 - i * .05), h * .035, "rgba(120,100,110,0.45)");
@@ -1124,7 +1296,7 @@ var SCENES = [
 			ctx.fillStyle = "#453640";
 			for (let i = 0; i < 6; i++) {
 				ctx.beginPath();
-				ctx.ellipse(w * (.06 + i * .18), h * (.9 + i % 2 * .05), w * .025, h * .02, 0, 0, TAU$2);
+				ctx.ellipse(w * (.06 + i * .18), h * (.9 + i % 2 * .05), w * .025, h * .02, 0, 0, TAU$3);
 				ctx.fill();
 			}
 		}
@@ -1181,7 +1353,7 @@ var SCENES = [
 				ctx.restore();
 				ctx.fillStyle = "#ffd166";
 				ctx.beginPath();
-				ctx.arc(x, h * .78 - s * 1.16, s * .08, 0, TAU$2);
+				ctx.arc(x, h * .78 - s * 1.16, s * .08, 0, TAU$3);
 				ctx.fill();
 			};
 			tent(w * .16, h * .13, "#ff5c7a");
@@ -1192,7 +1364,7 @@ var SCENES = [
 			for (let i = 0; i < 12; i++) {
 				ctx.fillStyle = `rgba(255,240,180,${.35 + (.5 + .5 * Math.sin(t * 4 + i)) * .5})`;
 				ctx.beginPath();
-				ctx.arc(w * (.04 + i * .085), h * .8, h * .007, 0, TAU$2);
+				ctx.arc(w * (.04 + i * .085), h * .8, h * .007, 0, TAU$3);
 				ctx.fill();
 			}
 		}
@@ -1230,11 +1402,11 @@ var SCENES = [
 			const tx = t * .02 % 1.2 * w - w * .1;
 			ctx.fillStyle = "#3aa869";
 			ctx.beginPath();
-			ctx.ellipse(tx, h * .5 + Math.sin(t) * h * .01, h * .05, h * .032, 0, 0, TAU$2);
+			ctx.ellipse(tx, h * .5 + Math.sin(t) * h * .01, h * .05, h * .032, 0, 0, TAU$3);
 			ctx.fill();
 			ctx.fillStyle = "#8ce99a";
 			ctx.beginPath();
-			ctx.arc(tx + h * .055, h * .5 + Math.sin(t) * h * .01, h * .018, 0, TAU$2);
+			ctx.arc(tx + h * .055, h * .5 + Math.sin(t) * h * .01, h * .018, 0, TAU$3);
 			ctx.fill();
 			bubbles(ctx, w, h, t, 22);
 		}
@@ -1263,6 +1435,94 @@ var CATEGORIES = [
 	"Vehicles",
 	"Food",
 	"Other"
+];
+var CHARACTERS = [
+	{
+		id: "owl",
+		name: "Owl",
+		emoji: "🦉",
+		personality: "Smart, curious & teacher-like"
+	},
+	{
+		id: "penguin",
+		name: "Penguin",
+		emoji: "🐧",
+		personality: "Funny, playful & energetic"
+	},
+	{
+		id: "panda",
+		name: "Panda",
+		emoji: "🐼",
+		personality: "Cute, calm & friendly"
+	},
+	{
+		id: "monkey",
+		name: "Baby Monkey",
+		emoji: "🐵",
+		personality: "Mischievous & highly energetic"
+	},
+	{
+		id: "bear",
+		name: "Baby Bear",
+		emoji: "🐻",
+		personality: "Warm, cheerful & adorable"
+	},
+	{
+		id: "bunny",
+		name: "Baby Bunny",
+		emoji: "🐰",
+		personality: "Sweet, curious & playful"
+	},
+	{
+		id: "brain",
+		name: "Brain",
+		emoji: "🧠",
+		personality: "Bright, playful & endlessly curious"
+	},
+	{
+		id: "egg",
+		name: "Rounded Egg",
+		emoji: "🥚",
+		personality: "Sweet, gentle & a little wobbly"
+	},
+	{
+		id: "bulb",
+		name: "Bright Bulb",
+		emoji: "💡",
+		personality: "Bright, cheerful & full of bright ideas"
+	}
+];
+var QUIZ_TYPES = [
+	{
+		id: "gk",
+		name: "GK Quiz",
+		emoji: "🧠",
+		heading: "GK QUIZ"
+	},
+	{
+		id: "grammar",
+		name: "Grammar Quiz",
+		emoji: "📝",
+		heading: "GRAMMAR QUIZ"
+	},
+	{
+		id: "riddles",
+		name: "Riddles Quiz",
+		emoji: "🧩",
+		heading: "RIDDLES QUIZ"
+	},
+	{
+		id: "interview",
+		name: "Interview Quiz",
+		emoji: "🎤",
+		heading: "INTERVIEW QUIZ"
+	},
+	{
+		id: "aptitude",
+		name: "Aptitude Math Quiz",
+		emoji: "🧮",
+		heading: "APTITUDE MATH QUIZ"
+	}
 ];
 var DIFFICULTIES = [
 	"Easy",
@@ -1310,12 +1570,15 @@ var DEFAULT_QUIZ = {
 		D: "Venus"
 	},
 	correct: "B",
+	character: "owl",
+	quizType: "gk",
 	category: "Space",
 	difficulty: "Easy",
 	language: "English",
 	timer: 5,
 	showExplanation: true,
 	explanation: "Mars looks red because its soil is full of rusty iron dust!",
+	showBoard: true,
 	background: DEFAULT_BACKGROUND
 };
 var base = (q) => ({
@@ -1523,6 +1786,107 @@ function BackgroundPicker({ value, onChange }) {
 		]
 	});
 }
+function CharacterSelector({ value, onChange }) {
+	const selected = CHARACTERS.find((c) => c.id === value);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: "space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+				className: "font-display text-lg font-extrabold text-foreground",
+				children: "Choose Your Character"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "grid grid-cols-3 gap-2",
+				children: CHARACTERS.map((c) => {
+					const active = c.id === value;
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => onChange(c.id),
+						className: `relative flex flex-col items-center gap-1 rounded-2xl border-2 p-3 text-center transition-all ${active ? "border-primary bg-primary/10 shadow-[var(--shadow-pop)]" : "border-transparent bg-muted hover:border-border"}`,
+						children: [
+							active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3.5" })
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-3xl leading-none",
+								children: c.emoji
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs font-bold leading-tight",
+								children: c.name
+							})
+						]
+					}, c.id);
+				})
+			}),
+			selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				className: "rounded-2xl bg-muted px-3 py-2 text-sm",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "font-bold",
+						children: "Selected Character:"
+					}),
+					" ",
+					selected.name,
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "block text-xs text-muted-foreground",
+						children: selected.personality
+					})
+				]
+			})
+		]
+	});
+}
+function QuizTypeSelector({ value, onChange }) {
+	const selected = QUIZ_TYPES.find((q) => q.id === value);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: "space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+				className: "font-display text-lg font-extrabold text-foreground",
+				children: "Choose Quiz Type"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "grid grid-cols-2 gap-2",
+				children: QUIZ_TYPES.map((q) => {
+					const active = q.id === value;
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => onChange(q.id),
+						className: `relative flex items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-left transition-all ${active ? "border-primary bg-primary/10 shadow-[var(--shadow-pop)]" : "border-transparent bg-muted hover:border-border"}`,
+						children: [
+							active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3.5" })
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xl leading-none",
+								children: q.emoji
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-sm font-bold leading-tight",
+								children: q.name
+							})
+						]
+					}, q.id);
+				})
+			}),
+			selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				className: "rounded-2xl bg-muted px-3 py-2 text-sm",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "font-bold",
+						children: "Heading on video:"
+					}),
+					" \"",
+					selected.heading,
+					"\""
+				]
+			})
+		]
+	});
+}
 var OPTION_TINT = {
 	A: "bg-[#ff8fab]",
 	B: "bg-[#4dd4ac]",
@@ -1544,6 +1908,14 @@ function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-6",
 		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CharacterSelector, {
+				value: quiz.character,
+				onChange: (id) => set("character", id)
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizTypeSelector, {
+				value: quiz.quizType,
+				onChange: (id) => set("quizType", id)
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "rounded-3xl bg-card p-5 shadow-[var(--shadow-soft)]",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
@@ -1558,7 +1930,9 @@ function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }) {
 							...p.quiz,
 							language: quiz.language,
 							timer: quiz.timer,
-							background: quiz.background
+							background: quiz.background,
+							character: quiz.character,
+							quizType: quiz.quizType
 						}),
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -1711,6 +2085,18 @@ function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }) {
 						placeholder: "That's right! Cows say moo!",
 						onChange: (e) => set("explanation", e.target.value),
 						className: "rounded-2xl"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center justify-between rounded-2xl bg-muted px-4 py-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, {
+							htmlFor: "show-board",
+							className: "cursor-pointer",
+							children: "Show board"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch, {
+							id: "show-board",
+							checked: quiz.showBoard,
+							onCheckedChange: (v) => set("showBoard", v)
+						})]
 					})
 				]
 			}),
@@ -1790,7 +2176,7 @@ function QuizEditor({ quiz, onChange, audio, onAudioChange, issues }) {
 		]
 	});
 }
-var TAU$1 = Math.PI * 2;
+var TAU$2 = Math.PI * 2;
 function poseToLook(s, t) {
 	const idleB = Math.sin(t * 3.1) * .5 + .5;
 	const blink = Math.sin(t * 1.7) > .985 || Math.sin(t * 2.9 + 1.3) > .99 ? .1 : 1;
@@ -1951,7 +2337,7 @@ function drawOwl(ctx, x, y, size, look) {
 	ctx.globalAlpha = .18;
 	ctx.fillStyle = "#1b1033";
 	ctx.beginPath();
-	ctx.ellipse(0, 6, w * .55, h * .05, 0, 0, TAU$1);
+	ctx.ellipse(0, 6, w * .55, h * .05, 0, 0, TAU$2);
 	ctx.fill();
 	ctx.restore();
 	const bodyCY = -h * .5 - size * .09;
@@ -2011,7 +2397,7 @@ function drawOwl(ctx, x, y, size, look) {
 		}
 		ctx.fillStyle = "rgba(255,255,255,0.14)";
 		ctx.beginPath();
-		ctx.ellipse(side * len * .12, len * .12, len * .14, len * .2, side * .5, 0, TAU$1);
+		ctx.ellipse(side * len * .12, len * .12, len * .14, len * .2, side * .5, 0, TAU$2);
 		ctx.fill();
 		ctx.restore();
 	};
@@ -2117,7 +2503,7 @@ function drawOwl(ctx, x, y, size, look) {
 		dg.addColorStop(1, "#f2ddc0");
 		ctx.fillStyle = dg;
 		ctx.beginPath();
-		ctx.arc(cx, eyeY, discR, 0, TAU$1);
+		ctx.arc(cx, eyeY, discR, 0, TAU$2);
 		ctx.fill();
 		ctx.strokeStyle = "rgba(122,80,160,0.25)";
 		ctx.lineWidth = size * .008;
@@ -2126,7 +2512,7 @@ function drawOwl(ctx, x, y, size, look) {
 	ctx.fillStyle = "rgba(255,141,161,0.45)";
 	[-1, 1].forEach((s) => {
 		ctx.beginPath();
-		ctx.ellipse(s * w * .34, eyeY + discR * .85, w * .08, h * .04, 0, 0, TAU$1);
+		ctx.ellipse(s * w * .34, eyeY + discR * .85, w * .08, h * .04, 0, 0, TAU$2);
 		ctx.fill();
 	});
 	const eyeR = size * .095 * look.eyeScale;
@@ -2134,7 +2520,7 @@ function drawOwl(ctx, x, y, size, look) {
 		const ex = s * eyeDX;
 		ctx.fillStyle = "#ffffff";
 		ctx.beginPath();
-		ctx.ellipse(ex, eyeY, eyeR, eyeR * 1.05 * look.eyeOpen, 0, 0, TAU$1);
+		ctx.ellipse(ex, eyeY, eyeR, eyeR * 1.05 * look.eyeOpen, 0, 0, TAU$2);
 		ctx.fill();
 		if (look.eyeOpen > .3) {
 			const px = ex + look.pupilX * eyeR * .7;
@@ -2144,15 +2530,15 @@ function drawOwl(ctx, x, y, size, look) {
 			ig.addColorStop(1, "#1d2b52");
 			ctx.fillStyle = ig;
 			ctx.beginPath();
-			ctx.arc(px, py, eyeR * .62, 0, TAU$1);
+			ctx.arc(px, py, eyeR * .62, 0, TAU$2);
 			ctx.fill();
 			ctx.fillStyle = "#ffffff";
 			ctx.beginPath();
-			ctx.arc(px - eyeR * .2, py - eyeR * .24, eyeR * .2, 0, TAU$1);
+			ctx.arc(px - eyeR * .2, py - eyeR * .24, eyeR * .2, 0, TAU$2);
 			ctx.fill();
 			ctx.globalAlpha = .8;
 			ctx.beginPath();
-			ctx.arc(px + eyeR * .22, py + eyeR * .22, eyeR * .1, 0, TAU$1);
+			ctx.arc(px + eyeR * .22, py + eyeR * .22, eyeR * .1, 0, TAU$2);
 			ctx.fill();
 			ctx.globalAlpha = 1;
 		} else {
@@ -2197,7 +2583,7 @@ function drawOwl(ctx, x, y, size, look) {
 	ctx.fill();
 	ctx.fillStyle = "rgba(255,255,255,0.45)";
 	ctx.beginPath();
-	ctx.ellipse(-beakW * .22, my + drop, beakW * .28, size * .008, -.35, 0, TAU$1);
+	ctx.ellipse(-beakW * .22, my + drop, beakW * .28, size * .008, -.35, 0, TAU$2);
 	ctx.fill();
 	if (look.mouth === "o" || open > .4) {
 		ctx.fillStyle = "#d4761a";
@@ -2208,14 +2594,14 @@ function drawOwl(ctx, x, y, size, look) {
 		ctx.fill();
 		ctx.fillStyle = "#ff8fa3";
 		ctx.beginPath();
-		ctx.ellipse(0, my + size * .03 * open, size * .02, size * .015 * open, 0, 0, TAU$1);
+		ctx.ellipse(0, my + size * .03 * open, size * .02, size * .015 * open, 0, 0, TAU$2);
 		ctx.fill();
 	}
 	ctx.save();
 	ctx.translate(0, bodyCY - h * .4);
 	ctx.fillStyle = "#3b2f63";
 	ctx.beginPath();
-	ctx.ellipse(0, 0, w * .28, h * .05, 0, 0, TAU$1);
+	ctx.ellipse(0, 0, w * .28, h * .05, 0, 0, TAU$2);
 	ctx.fill();
 	ctx.fillStyle = "#2c2350";
 	ctx.beginPath();
@@ -2233,7 +2619,7 @@ function drawOwl(ctx, x, y, size, look) {
 	ctx.stroke();
 	ctx.fillStyle = "#ffd166";
 	ctx.beginPath();
-	ctx.arc(w * .38, h * .1, size * .022, 0, TAU$1);
+	ctx.arc(w * .38, h * .1, size * .022, 0, TAU$2);
 	ctx.fill();
 	ctx.restore();
 	if (look.sweat > 0) {
@@ -2241,9 +2627,1374 @@ function drawOwl(ctx, x, y, size, look) {
 		[-1, 1].forEach((s, i) => {
 			const dy = (look.legPhase + i) % 1 * size * .05;
 			ctx.beginPath();
-			ctx.ellipse(s * w * .44, bodyCY - h * .22 + dy + i * size * .06, size * .022, size * .032, 0, 0, TAU$1);
+			ctx.ellipse(s * w * .44, bodyCY - h * .22 + dy + i * size * .06, size * .022, size * .032, 0, 0, TAU$2);
 			ctx.fill();
 		});
+	}
+	ctx.restore();
+}
+var TAU$1 = Math.PI * 2;
+/** Draw any built-in character at (x, y) = feet position, `size` = body height. */
+function drawCharacter(ctx, id, x, y, size, look) {
+	switch (id) {
+		case "owl":
+			drawOwl(ctx, x, y, size, look);
+			return;
+		case "penguin":
+			drawPenguin(ctx, x, y, size, look);
+			return;
+		case "panda":
+			drawPanda(ctx, x, y, size, look);
+			return;
+		case "monkey":
+			drawMonkey(ctx, x, y, size, look);
+			return;
+		case "bear":
+			drawBear(ctx, x, y, size, look);
+			return;
+		case "bunny":
+			drawBunny(ctx, x, y, size, look);
+			return;
+		case "brain":
+			drawBrain(ctx, x, y, size, look);
+			return;
+		case "egg":
+			drawEgg(ctx, x, y, size, look);
+			return;
+		case "bulb":
+			drawBulb(ctx, x, y, size, look);
+			return;
+	}
+}
+function drawGroundShadow(ctx, w, h, alpha = .18) {
+	ctx.save();
+	ctx.globalAlpha = alpha;
+	const g = ctx.createRadialGradient(0, 6, 0, 0, 6, w * .5);
+	g.addColorStop(0, "#1b1033");
+	g.addColorStop(1, "rgba(27,16,51,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.ellipse(0, 6, w * .5, h * .04, 0, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+}
+/** Soft dark wash where a limb/head visually tucks behind another form. */
+function contactShadow(ctx, cx, cy, rx, ry, rot = 0, alpha = .16) {
+	ctx.save();
+	ctx.globalAlpha = alpha;
+	const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+	g.addColorStop(0, "#2a1810");
+	g.addColorStop(1, "rgba(42,24,16,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.ellipse(cx, cy, rx, ry, rot, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+}
+function topSheen(ctx, top, height, spanW, alpha = .22) {
+	const g = ctx.createLinearGradient(0, top, 0, top + height);
+	g.addColorStop(0, `rgba(255,255,255,${alpha})`);
+	g.addColorStop(1, "rgba(255,255,255,0)");
+	ctx.fillStyle = g;
+	ctx.fillRect(-spanW, top, spanW * 2, height);
+}
+function furFringe(ctx, pathFn, color, width) {
+	ctx.save();
+	pathFn();
+	ctx.strokeStyle = color;
+	ctx.lineWidth = width;
+	ctx.lineJoin = "round";
+	ctx.globalAlpha = .5;
+	ctx.stroke();
+	ctx.restore();
+}
+function pawPad(ctx, cx, cy, r, color) {
+	ctx.save();
+	ctx.globalAlpha = .55;
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.ellipse(cx, cy, r * .55, r * .42, 0, 0, TAU$1);
+	ctx.fill();
+	[
+		-1,
+		0,
+		1
+	].forEach((i) => {
+		ctx.beginPath();
+		ctx.ellipse(cx + i * r * .42, cy - r * .55, r * .16, r * .13, 0, 0, TAU$1);
+		ctx.fill();
+	});
+	ctx.restore();
+}
+function drawExpressiveEyes(ctx, exL, exR, eyeY, discR, look, irisLight = "#5aa0e6", irisDark = "#1d2b52") {
+	[exL, exR].forEach((ex) => {
+		ctx.save();
+		ctx.globalAlpha = .12;
+		ctx.fillStyle = "#2b1f4a";
+		ctx.beginPath();
+		ctx.ellipse(ex, eyeY + discR * .15, discR * 1.05, discR * 1.05, 0, 0, TAU$1);
+		ctx.fill();
+		ctx.restore();
+		const wg = ctx.createRadialGradient(ex, eyeY - discR * .25, discR * .1, ex, eyeY, discR);
+		wg.addColorStop(0, "#ffffff");
+		wg.addColorStop(1, "#f1ede6");
+		ctx.fillStyle = wg;
+		ctx.beginPath();
+		ctx.arc(ex, eyeY, discR, 0, TAU$1);
+		ctx.fill();
+	});
+	const eyeR = discR * .6 * look.eyeScale;
+	[exL, exR].forEach((ex) => {
+		ctx.fillStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.ellipse(ex, eyeY, eyeR, eyeR * 1.05 * look.eyeOpen, 0, 0, TAU$1);
+		ctx.fill();
+		if (look.eyeOpen > .3) {
+			const px = ex + look.pupilX * eyeR * .7;
+			const py = eyeY + look.pupilY * eyeR * .7;
+			const ig = ctx.createRadialGradient(px, py, eyeR * .05, px, py, eyeR * .62);
+			ig.addColorStop(0, irisLight);
+			ig.addColorStop(.7, irisDark);
+			ig.addColorStop(1, "#000000");
+			ctx.fillStyle = ig;
+			ctx.beginPath();
+			ctx.arc(px, py, eyeR * .62, 0, TAU$1);
+			ctx.fill();
+			ctx.fillStyle = "#ffffff";
+			ctx.beginPath();
+			ctx.arc(px - eyeR * .22, py - eyeR * .26, eyeR * .2, 0, TAU$1);
+			ctx.fill();
+			ctx.globalAlpha = .8;
+			ctx.beginPath();
+			ctx.arc(px + eyeR * .24, py + eyeR * .2, eyeR * .09, 0, TAU$1);
+			ctx.fill();
+			ctx.globalAlpha = 1;
+			ctx.strokeStyle = "rgba(0,0,0,0.12)";
+			ctx.lineWidth = eyeR * .14;
+			ctx.beginPath();
+			ctx.arc(ex, eyeY, eyeR * 1.02, Math.PI * 1.1, Math.PI * 1.9);
+			ctx.stroke();
+		} else {
+			ctx.strokeStyle = "#3a2a20";
+			ctx.lineWidth = discR * .12;
+			ctx.beginPath();
+			ctx.arc(ex, eyeY, eyeR * .9, Math.PI * .15, Math.PI * .85);
+			ctx.stroke();
+		}
+	});
+}
+function drawBrows(ctx, exL, exR, browY, discR, look, color) {
+	ctx.strokeStyle = color;
+	ctx.lineWidth = discR * .16;
+	ctx.lineCap = "round";
+	[[
+		exL,
+		look.browL,
+		-1
+	], [
+		exR,
+		look.browR,
+		1
+	]].forEach(([ex, brow, s]) => {
+		const by = browY - brow * discR * .35;
+		ctx.save();
+		ctx.translate(ex, by);
+		ctx.rotate(brow * s);
+		ctx.beginPath();
+		ctx.moveTo(-discR * .55, 0);
+		ctx.quadraticCurveTo(0, -discR * .28, discR * .55, 0);
+		ctx.stroke();
+		ctx.restore();
+	});
+}
+function cheekBlush(ctx, cx, cy, rx, ry, alpha = .4) {
+	ctx.save();
+	const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+	g.addColorStop(0, `rgba(255,141,161,${alpha})`);
+	g.addColorStop(1, "rgba(255,141,161,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+}
+function noseShine(ctx, cx, cy, r) {
+	ctx.save();
+	ctx.globalAlpha = .75;
+	ctx.fillStyle = "#ffffff";
+	ctx.beginPath();
+	ctx.ellipse(cx - r * .3, cy - r * .3, r * .28, r * .18, -.4, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+}
+function drawPenguin(ctx, x, y, size, look) {
+	const w = size * .58;
+	const h = size;
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .45 + look.spin);
+	drawGroundShadow(ctx, w * .95, h);
+	const waddle = Math.sin(look.legPhase);
+	const hipSway = waddle * size * .035;
+	const bodyLean = waddle * .06;
+	const bodyBottomY = -size * .12;
+	const bodyTopY = -h * .9;
+	ctx.save();
+	ctx.rotate(bodyLean);
+	contactShadow(ctx, hipSway, -size * .03, w * .4, size * .05, 0, .14);
+	[-1, 1].forEach((s) => {
+		const fg = ctx.createLinearGradient(0, -size * .05, 0, size * .02);
+		fg.addColorStop(0, "#f6b544");
+		fg.addColorStop(1, "#c96a18");
+		ctx.fillStyle = fg;
+		ctx.beginPath();
+		ctx.ellipse(s * w * .2 + hipSway * .6, -size * .01, size * .09, size * .032, s * .08, 0, TAU$1);
+		ctx.fill();
+		ctx.fillStyle = "#e59622";
+		[
+			-1,
+			0,
+			1
+		].forEach((toe) => {
+			ctx.beginPath();
+			ctx.ellipse(s * w * .2 + hipSway * .6 + toe * size * .022, size * .018, size * .018, size * .012, s * .1, 0, TAU$1);
+			ctx.fill();
+		});
+	});
+	const bodyPath = () => {
+		ctx.beginPath();
+		ctx.moveTo(hipSway - w * .16, bodyTopY + h * .06);
+		ctx.bezierCurveTo(hipSway - w * .46, bodyTopY + h * .16, hipSway - w * .58, bodyBottomY - h * .42, hipSway - w * .52, bodyBottomY - h * .1);
+		ctx.bezierCurveTo(hipSway - w * .4, bodyBottomY + h * .04, hipSway - w * .18, bodyBottomY, hipSway, bodyBottomY);
+		ctx.bezierCurveTo(hipSway + w * .18, bodyBottomY, hipSway + w * .4, bodyBottomY + h * .04, hipSway + w * .52, bodyBottomY - h * .1);
+		ctx.bezierCurveTo(hipSway + w * .58, bodyBottomY - h * .42, hipSway + w * .46, bodyTopY + h * .16, hipSway + w * .16, bodyTopY + h * .06);
+		ctx.bezierCurveTo(hipSway + w * .1, bodyTopY - h * .05, hipSway - w * .1, bodyTopY - h * .05, hipSway - w * .16, bodyTopY + h * .06);
+		ctx.closePath();
+	};
+	const grad = ctx.createLinearGradient(-w * .3, bodyTopY, w * .2, bodyBottomY);
+	grad.addColorStop(0, "#526477");
+	grad.addColorStop(.32, "#293746");
+	grad.addColorStop(.72, "#17222d");
+	grad.addColorStop(1, "#090f15");
+	bodyPath();
+	ctx.fillStyle = grad;
+	ctx.fill();
+	ctx.save();
+	bodyPath();
+	ctx.clip();
+	ctx.fillStyle = "#edf1f1";
+	ctx.beginPath();
+	ctx.moveTo(hipSway, bodyTopY + h * .2);
+	ctx.bezierCurveTo(hipSway - w * .14, bodyTopY + h * .2, hipSway - w * .28, bodyTopY + h * .38, hipSway - w * .3, bodyBottomY - h * .08);
+	ctx.bezierCurveTo(hipSway - w * .18, bodyBottomY + h * .01, hipSway + w * .18, bodyBottomY + h * .01, hipSway + w * .3, bodyBottomY - h * .08);
+	ctx.bezierCurveTo(hipSway + w * .28, bodyTopY + h * .38, hipSway + w * .14, bodyTopY + h * .2, hipSway, bodyTopY + h * .2);
+	ctx.closePath();
+	ctx.fill();
+	ctx.fillStyle = "rgba(195,207,215,0.42)";
+	ctx.beginPath();
+	ctx.ellipse(hipSway + w * .12, bodyBottomY - h * .2, w * .12, h * .2, .2, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+	const headCenterY = bodyTopY + h * .1;
+	const hood = ctx.createRadialGradient(hipSway - w * .18, bodyTopY - h * .03, 0, hipSway, headCenterY, w * .58);
+	hood.addColorStop(0, "#66798a");
+	hood.addColorStop(.45, "#263746");
+	hood.addColorStop(1, "#0b131b");
+	ctx.fillStyle = hood;
+	ctx.beginPath();
+	ctx.ellipse(hipSway, headCenterY, w * .47, h * .29, 0, Math.PI, TAU$1);
+	ctx.fill();
+	ctx.fillStyle = "rgba(249,250,247,0.92)";
+	[-1, 1].forEach((s) => {
+		ctx.beginPath();
+		ctx.ellipse(hipSway + s * w * .18, bodyTopY + h * .18, w * .125, h * .16, s * .16, 0, TAU$1);
+		ctx.fill();
+	});
+	ctx.save();
+	bodyPath();
+	ctx.clip();
+	topSheen(ctx, bodyTopY, h * .4, w, .16);
+	ctx.restore();
+	furFringe(ctx, bodyPath, "rgba(255,255,255,0.3)", size * .012);
+	const flapSwing = Math.sin(look.legPhase) * .22;
+	const drawFlipper = (side, angle) => {
+		const sx = hipSway + side * w * .5;
+		const sy = bodyTopY + h * .24;
+		const len = size * .43;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (.15 + angle * .55) + flapSwing * side * -1);
+		contactShadow(ctx, 0, len * .15, size * .09, size * .12, 0, .2);
+		const fg = ctx.createLinearGradient(-size * .06, 0, size * .06, len);
+		fg.addColorStop(0, "#344655");
+		fg.addColorStop(.45, "#182630");
+		fg.addColorStop(1, "#070d12");
+		ctx.fillStyle = fg;
+		ctx.beginPath();
+		ctx.moveTo(-size * .055, 0);
+		ctx.bezierCurveTo(-size * .13, len * .22, -size * .1, len * .8, -size * .025, len);
+		ctx.quadraticCurveTo(0, len * 1.04, size * .025, len);
+		ctx.bezierCurveTo(size * .1, len * .8, size * .13, len * .22, size * .055, 0);
+		ctx.closePath();
+		ctx.fill();
+		ctx.restore();
+	};
+	drawFlipper(-1, look.armL);
+	drawFlipper(1, look.armR);
+	ctx.restore();
+	const eyeY = bodyTopY + h * .07;
+	const discR = size * .135;
+	const eyeDX = w * .17;
+	contactShadow(ctx, hipSway, eyeY + discR * 1.3, w * .32, size * .07, 0, .14);
+	cheekBlush(ctx, hipSway - w * .26, eyeY + discR * .7, w * .06, h * .028, .4);
+	cheekBlush(ctx, hipSway + w * .26, eyeY + discR * .7, w * .06, h * .028, .4);
+	drawExpressiveEyes(ctx, hipSway - eyeDX, hipSway + eyeDX, eyeY, discR, look);
+	drawBrows(ctx, hipSway - eyeDX, hipSway + eyeDX, eyeY - discR * .9, discR, look, "#161f2b");
+	const beakW = size * .042;
+	const my = eyeY + discR * .88;
+	const bg = ctx.createLinearGradient(0, my - size * .02, 0, my + size * .02);
+	bg.addColorStop(0, "#ffb35c");
+	bg.addColorStop(1, "#e37f1d");
+	ctx.fillStyle = bg;
+	ctx.beginPath();
+	ctx.moveTo(hipSway - beakW, my);
+	ctx.quadraticCurveTo(hipSway, my + size * (.018 + .05 * look.mouthOpen), hipSway + beakW, my);
+	ctx.quadraticCurveTo(hipSway, my - size * .022, hipSway - beakW, my);
+	ctx.closePath();
+	ctx.fill();
+	noseShine(ctx, hipSway - beakW * .3, my - size * .006, beakW * .6);
+	ctx.restore();
+}
+function drawPanda(ctx, x, y, size, look) {
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .35 + look.spin * .8);
+	drawGroundShadow(ctx, size * .7, size);
+	const bodyR = size * .32;
+	const bodyCY = -size * .42;
+	const headR = size * .29;
+	const headCY = -size * .82;
+	const legLift = Math.sin(look.legPhase) * size * .018;
+	[-1, 1].forEach((s, i) => {
+		const lift = i === 0 ? legLift : -legLift;
+		const lg = ctx.createRadialGradient(s * size * .19 - size * .03, -size * .07, size * .02, s * size * .19, -size * .04, size * .13);
+		lg.addColorStop(0, "#333333");
+		lg.addColorStop(1, "#111111");
+		ctx.fillStyle = lg;
+		ctx.beginPath();
+		ctx.ellipse(s * size * .19, -size * .045 + Math.abs(lift), size * .115, size * .09, 0, 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, s * size * .19, -size * .02 + Math.abs(lift), size * .09, "#3a3a3a");
+	});
+	contactShadow(ctx, 0, bodyCY + bodyR * .55, bodyR * .85, bodyR * .35, 0, .14);
+	const bg = ctx.createRadialGradient(-bodyR * .35, bodyCY - bodyR * .4, bodyR * .1, bodyR * .1, bodyCY + bodyR * .2, bodyR * 1.4);
+	bg.addColorStop(0, "#ffffff");
+	bg.addColorStop(.6, "#f2f2f2");
+	bg.addColorStop(1, "#d8d8d8");
+	ctx.fillStyle = bg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyR * 1.02, bodyR, 0, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyR * 1.02, bodyR, 0, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, bodyCY - bodyR, bodyR * 1.1, bodyR, .2);
+	furFringe(ctx, () => ctx.ellipse(0, bodyCY, bodyR * 1, bodyR * .98, 0, 0, TAU$1), "rgba(0,0,0,0.05)", size * .02);
+	ctx.restore();
+	const tg = ctx.createRadialGradient(-size * .01, bodyCY + bodyR * .85, 0, 0, bodyCY + bodyR * .9, size * .06);
+	tg.addColorStop(0, "#3a3a3a");
+	tg.addColorStop(1, "#1a1a1a");
+	ctx.fillStyle = tg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY + bodyR * .9, size * .055, size * .045, 0, 0, TAU$1);
+	ctx.fill();
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * bodyR * .85;
+		const sy = bodyCY - bodyR * .1;
+		const len = size * .24;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .2));
+		contactShadow(ctx, 0, -size * .02, size * .1, size * .08, 0, .18);
+		const ag = ctx.createLinearGradient(-size * .06, 0, size * .06, len);
+		ag.addColorStop(0, "#2b2b2b");
+		ag.addColorStop(1, "#101010");
+		ctx.strokeStyle = ag;
+		ctx.lineWidth = size * .13;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#1f1f1f";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.075 + handUp * .02), 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, 0, len, size * .07, "#4a4a4a");
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	contactShadow(ctx, 0, headCY + headR * .7, headR * .7, headR * .25, 0, .16);
+	const hg = ctx.createRadialGradient(-headR * .3, headCY - headR * .35, headR * .08, 0, headCY, headR * 1.2);
+	hg.addColorStop(0, "#ffffff");
+	hg.addColorStop(1, "#eeeeee");
+	ctx.fillStyle = hg;
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, headCY - headR, headR * 1.1, headR, .22);
+	ctx.restore();
+	[-1, 1].forEach((s) => {
+		const eg = ctx.createRadialGradient(s * headR * .72 - headR * .1, headCY - headR * .9, 0, s * headR * .72, headCY - headR * .82, headR * .4);
+		eg.addColorStop(0, "#3a3a3a");
+		eg.addColorStop(1, "#111111");
+		ctx.fillStyle = eg;
+		ctx.beginPath();
+		ctx.arc(s * headR * .72, headCY - headR * .82, headR * .38, 0, TAU$1);
+		ctx.fill();
+	});
+	const eyeDX = headR * .4;
+	const eyeY = headCY + headR * .04;
+	[-1, 1].forEach((s) => {
+		const pg = ctx.createRadialGradient(s * eyeDX - headR * .08, eyeY - headR * .1, 0, s * eyeDX, eyeY, headR * .42);
+		pg.addColorStop(0, "#2e2e2e");
+		pg.addColorStop(1, "#0c0c0c");
+		ctx.fillStyle = pg;
+		ctx.beginPath();
+		ctx.ellipse(s * eyeDX, eyeY, headR * .33, headR * .42, s * .35, 0, TAU$1);
+		ctx.fill();
+	});
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, headR * .22, look, "#8a6a4a", "#241a10");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - headR * .32, headR * .28, look, "#1f1f1f");
+	cheekBlush(ctx, -headR * .55, eyeY + headR * .4, headR * .16, headR * .09);
+	cheekBlush(ctx, headR * .55, eyeY + headR * .4, headR * .16, headR * .09);
+	const muzzleCY = eyeY + headR * .4;
+	const mg = ctx.createRadialGradient(0, muzzleCY - headR * .1, 0, 0, muzzleCY, headR * .35);
+	mg.addColorStop(0, "#ffffff");
+	mg.addColorStop(1, "#e9e9e9");
+	ctx.fillStyle = mg;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY, headR * .32, headR * .23, 0, 0, TAU$1);
+	ctx.fill();
+	const ng = ctx.createRadialGradient(-headR * .02, muzzleCY - headR * .07, 0, 0, muzzleCY - headR * .05, headR * .08);
+	ng.addColorStop(0, "#3a3a3a");
+	ng.addColorStop(1, "#0a0a0a");
+	ctx.fillStyle = ng;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY - headR * .05, headR * .075, headR * .05, 0, 0, TAU$1);
+	ctx.fill();
+	noseShine(ctx, -headR * .02, muzzleCY - headR * .06, headR * .05);
+	ctx.strokeStyle = "#1f1f1f";
+	ctx.lineWidth = headR * .05;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = headR * (.12 + look.mouthOpen * .08);
+	ctx.moveTo(-mw, muzzleCY + headR * .07);
+	ctx.quadraticCurveTo(0, muzzleCY + headR * (.14 + look.mouthOpen * .18), mw, muzzleCY + headR * .07);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawMonkey(ctx, x, y, size, look) {
+	const w = size * .55;
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .65 + look.spin);
+	drawGroundShadow(ctx, size * .55, size, .16);
+	const bodyR = size * .2;
+	const bodyCY = -size * .4;
+	const headR = size * .24;
+	const headCY = -size * .72;
+	const legPh = look.legPhase * 1.3;
+	[-1, 1].forEach((s, i) => {
+		const swing = Math.sin(legPh + i * Math.PI) * size * .05;
+		const lg = ctx.createLinearGradient(0, bodyCY, 0, 0);
+		lg.addColorStop(0, "#a8703a");
+		lg.addColorStop(1, "#7a5222");
+		ctx.strokeStyle = lg;
+		ctx.lineWidth = size * .06;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(s * w * .16, bodyCY + bodyR * .7);
+		ctx.lineTo(s * w * .16 + swing, 0);
+		ctx.stroke();
+		ctx.fillStyle = "#e8c99e";
+		ctx.beginPath();
+		ctx.ellipse(s * w * .16 + swing, size * .008, size * .045, size * .024, 0, 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, s * w * .16 + swing, size * .012, size * .035, "#c9a876");
+	});
+	const tension = look.shake + look.sweat * .6;
+	const tailSway = Math.sin(look.legPhase * 1.8 + look.spin * 6) * (.4 + tension * .9);
+	const tg = ctx.createLinearGradient(w * .18, bodyCY, w * .6, bodyCY - size * .35);
+	tg.addColorStop(0, "#a8703a");
+	tg.addColorStop(1, "#7a5222");
+	ctx.strokeStyle = tg;
+	ctx.lineWidth = size * .05;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	ctx.moveTo(w * .18, bodyCY + bodyR * .3);
+	ctx.bezierCurveTo(w * .6, bodyCY + size * (.15 + tailSway * .13), w * .55, bodyCY - size * (.15 - tailSway * .2), w * (.32 + tailSway * .32), bodyCY - size * (.35 + Math.abs(tailSway) * .16));
+	ctx.stroke();
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * bodyR * .95;
+		const sy = bodyCY - bodyR * .1;
+		const len = size * .42;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .1));
+		contactShadow(ctx, 0, -size * .01, size * .08, size * .06, 0, .15);
+		const ag = ctx.createLinearGradient(-size * .05, 0, size * .05, len);
+		ag.addColorStop(0, "#a8703a");
+		ag.addColorStop(1, "#7a5222");
+		ctx.strokeStyle = ag;
+		ctx.lineWidth = size * .065;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#f6dfc0";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.045 + handUp * .015), 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, 0, len, size * .04, "#d9bd91");
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	contactShadow(ctx, 0, bodyCY + bodyR * .7, bodyR * .7, bodyR * .3, 0, .14);
+	const bg = ctx.createRadialGradient(-bodyR * .3, bodyCY - bodyR * .3, bodyR * .1, 0, bodyCY, bodyR * 1.3);
+	bg.addColorStop(0, "#c48c4c");
+	bg.addColorStop(1, "#8f5f2d");
+	ctx.fillStyle = bg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyR * .9, bodyR, 0, 0, TAU$1);
+	ctx.fill();
+	ctx.fillStyle = "#f6dfc0";
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY + bodyR * .15, bodyR * .55, bodyR * .62, 0, 0, TAU$1);
+	ctx.fill();
+	contactShadow(ctx, 0, headCY + headR * .65, headR * .6, headR * .2, 0, .15);
+	const hg = ctx.createRadialGradient(-headR * .3, headCY - headR * .3, headR * .08, 0, headCY, headR * 1.2);
+	hg.addColorStop(0, "#c48c4c");
+	hg.addColorStop(1, "#8f5f2d");
+	ctx.fillStyle = hg;
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, headCY - headR, headR * .9, headR, .18);
+	ctx.restore();
+	[-1, 1].forEach((s) => {
+		const eg = ctx.createRadialGradient(s * headR * .95 - headR * .06, headCY - headR * .1, 0, s * headR * .95, headCY - headR * .05, headR * .32);
+		eg.addColorStop(0, "#e8c99e");
+		eg.addColorStop(1, "#c9a876");
+		ctx.fillStyle = eg;
+		ctx.beginPath();
+		ctx.arc(s * headR * .95, headCY - headR * .05, headR * .3, 0, TAU$1);
+		ctx.fill();
+		ctx.fillStyle = "#b58a58";
+		ctx.beginPath();
+		ctx.arc(s * headR * .95, headCY - headR * .05, headR * .17, 0, TAU$1);
+		ctx.fill();
+	});
+	const muzzleCY = headCY + headR * .34;
+	const mg = ctx.createRadialGradient(0, muzzleCY - headR * .15, 0, 0, muzzleCY, headR * .5);
+	mg.addColorStop(0, "#fbe9cc");
+	mg.addColorStop(1, "#e8c99e");
+	ctx.fillStyle = mg;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY, headR * .48, headR * .34, 0, 0, TAU$1);
+	ctx.fill();
+	const eyeDX = headR * .34;
+	const eyeY = headCY - headR * .03;
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, headR * .21, look, "#6b4226", "#241a10");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - headR * .3, headR * .26, look, "#5a3a1e");
+	cheekBlush(ctx, -headR * .48, muzzleCY - headR * .02, headR * .13, headR * .08);
+	cheekBlush(ctx, headR * .48, muzzleCY - headR * .02, headR * .13, headR * .08);
+	const ng = ctx.createRadialGradient(-headR * .01, muzzleCY - headR * .07, 0, 0, muzzleCY - headR * .05, headR * .06);
+	ng.addColorStop(0, "#9a6a44");
+	ng.addColorStop(1, "#5a3a1e");
+	ctx.fillStyle = ng;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY - headR * .05, headR * .055, headR * .04, 0, 0, TAU$1);
+	ctx.fill();
+	noseShine(ctx, -headR * .015, muzzleCY - headR * .06, headR * .04);
+	ctx.strokeStyle = "#7a4a25";
+	ctx.lineWidth = headR * .05;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = headR * (.14 + look.mouthOpen * .1);
+	ctx.moveTo(-mw, muzzleCY + headR * .11);
+	ctx.quadraticCurveTo(0, muzzleCY + headR * (.18 + look.mouthOpen * .2), mw, muzzleCY + headR * .11);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawBear(ctx, x, y, size, look) {
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size * .7);
+	ctx.rotate(look.tilt * .3 + look.spin * .7);
+	drawGroundShadow(ctx, size * .85, size, .2);
+	const bodyRX = size * .37;
+	const bodyRY = size * .34;
+	const bodyCY = -size * .38;
+	const headR = size * .27;
+	const headCY = -size * .76;
+	const stomp = Math.abs(Math.sin(look.legPhase * .8)) * size * .015;
+	[-1, 1].forEach((s) => {
+		const lg = ctx.createRadialGradient(s * size * .22 - size * .04, -size * .08, size * .02, s * size * .22, -size * .04, size * .15);
+		lg.addColorStop(0, "#c17f4a");
+		lg.addColorStop(1, "#8a5a30");
+		ctx.fillStyle = lg;
+		ctx.beginPath();
+		ctx.ellipse(s * size * .22, -size * .045 + stomp, size * .13, size * .1, 0, 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, s * size * .22, -size * .02 + stomp, size * .1, "#6f4423");
+	});
+	contactShadow(ctx, 0, bodyCY + bodyRY * .55, bodyRX * .85, bodyRY * .35, 0, .16);
+	const bg = ctx.createRadialGradient(-bodyRX * .35, bodyCY - bodyRY * .4, bodyRX * .1, bodyRX * .1, bodyCY + bodyRY * .2, bodyRX * 1.4);
+	bg.addColorStop(0, "#e0a468");
+	bg.addColorStop(.6, "#c17f4a");
+	bg.addColorStop(1, "#8a5a30");
+	ctx.fillStyle = bg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyRX, bodyRY, 0, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyRX, bodyRY, 0, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, bodyCY - bodyRY, bodyRY * 1.1, bodyRX, .2);
+	ctx.restore();
+	const belg = ctx.createRadialGradient(0, bodyCY + bodyRY * .05, 0, 0, bodyCY + bodyRY * .15, bodyRX * .6);
+	belg.addColorStop(0, "#fbe6c6");
+	belg.addColorStop(1, "#e6c79a");
+	ctx.fillStyle = belg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY + bodyRY * .15, bodyRX * .55, bodyRY * .58, 0, 0, TAU$1);
+	ctx.fill();
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * bodyRX * .95;
+		const sy = bodyCY - bodyRY * .05;
+		const len = size * .2;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .25));
+		contactShadow(ctx, 0, -size * .02, size * .11, size * .09, 0, .18);
+		const ag = ctx.createLinearGradient(-size * .075, 0, size * .075, len);
+		ag.addColorStop(0, "#c17f4a");
+		ag.addColorStop(1, "#8a5a30");
+		ctx.strokeStyle = ag;
+		ctx.lineWidth = size * .15;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#a8683a";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.09 + handUp * .02), 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, 0, len, size * .085, "#6f4423");
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	const tg = ctx.createRadialGradient(-size * .01, bodyCY + bodyRY * .8, 0, 0, bodyCY + bodyRY * .85, size * .06);
+	tg.addColorStop(0, "#c17f4a");
+	tg.addColorStop(1, "#8a5a30");
+	ctx.fillStyle = tg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY + bodyRY * .85, size * .05, size * .04, 0, 0, TAU$1);
+	ctx.fill();
+	contactShadow(ctx, 0, headCY + headR * .7, headR * .65, headR * .24, 0, .16);
+	const hg = ctx.createRadialGradient(-headR * .35, headCY - headR * .4, headR * .08, 0, headCY, headR * 1.2);
+	hg.addColorStop(0, "#e0a468");
+	hg.addColorStop(1, "#c17f4a");
+	ctx.fillStyle = hg;
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, headCY - headR, headR * 1.1, headR, .2);
+	ctx.restore();
+	[-1, 1].forEach((s) => {
+		const eg = ctx.createRadialGradient(s * headR * .7 - headR * .08, headCY - headR * .95, 0, s * headR * .7, headCY - headR * .85, headR * .28);
+		eg.addColorStop(0, "#c17f4a");
+		eg.addColorStop(1, "#8a5a30");
+		ctx.fillStyle = eg;
+		ctx.beginPath();
+		ctx.arc(s * headR * .7, headCY - headR * .85, headR * .25, 0, TAU$1);
+		ctx.fill();
+		ctx.fillStyle = "#f0d3a8";
+		ctx.beginPath();
+		ctx.arc(s * headR * .7, headCY - headR * .85, headR * .13, 0, TAU$1);
+		ctx.fill();
+	});
+	const eyeDX = headR * .4;
+	const eyeY = headCY - headR * .02;
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, headR * .22, look, "#6b4226", "#241a10");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - headR * .3, headR * .28, look, "#5a3a22");
+	cheekBlush(ctx, -headR * .55, eyeY + headR * .4, headR * .16, headR * .09);
+	cheekBlush(ctx, headR * .55, eyeY + headR * .4, headR * .16, headR * .09);
+	const muzzleCY = eyeY + headR * .42;
+	const mg = ctx.createRadialGradient(0, muzzleCY - headR * .12, 0, 0, muzzleCY, headR * .38);
+	mg.addColorStop(0, "#fbe6c6");
+	mg.addColorStop(1, "#e6c79a");
+	ctx.fillStyle = mg;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY, headR * .35, headR * .24, 0, 0, TAU$1);
+	ctx.fill();
+	const ng = ctx.createRadialGradient(-headR * .02, muzzleCY - headR * .07, 0, 0, muzzleCY - headR * .05, headR * .07);
+	ng.addColorStop(0, "#7a4a2a");
+	ng.addColorStop(1, "#3d2412");
+	ctx.fillStyle = ng;
+	ctx.beginPath();
+	ctx.ellipse(0, muzzleCY - headR * .05, headR * .07, headR * .05, 0, 0, TAU$1);
+	ctx.fill();
+	noseShine(ctx, -headR * .02, muzzleCY - headR * .06, headR * .045);
+	ctx.strokeStyle = "#5a3a22";
+	ctx.lineWidth = headR * .05;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = headR * (.12 + look.mouthOpen * .08);
+	ctx.moveTo(-mw, muzzleCY + headR * .07);
+	ctx.quadraticCurveTo(0, muzzleCY + headR * (.14 + look.mouthOpen * .18), mw, muzzleCY + headR * .07);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawBunny(ctx, x, y, size, look) {
+	ctx.save();
+	const hop = Math.max(0, Math.sin(look.legPhase)) * size * .06;
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size - hop);
+	ctx.rotate(look.tilt * .5 + look.spin);
+	const airborne = hop / (size * .06);
+	drawGroundShadow(ctx, size * .4, size, .18 * (1 - airborne * .6));
+	const bodyR = size * .24;
+	const bodyCY = -size * .4;
+	const headR = size * .27;
+	const headCY = -size * .76;
+	[-1, 1].forEach((s) => {
+		const lg = ctx.createRadialGradient(s * size * .19 - size * .03, -size * .06, size * .02, s * size * .19, -size * .03, size * .15);
+		lg.addColorStop(0, "#ffffff");
+		lg.addColorStop(1, "#e2dde0");
+		ctx.fillStyle = lg;
+		ctx.beginPath();
+		ctx.ellipse(s * size * .19, -size * .03 * (1 - airborne * .5), size * (.11 - airborne * .02), size * (.15 - airborne * .05), 0, 0, TAU$1);
+		ctx.fill();
+	});
+	[-1, 1].forEach((s) => {
+		ctx.fillStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.ellipse(s * size * .21, size * .02, size * .065, size * .024, 0, 0, TAU$1);
+		ctx.fill();
+		pawPad(ctx, s * size * .21, size * .024, size * .05, "#f0d8dd");
+	});
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * bodyR * .85;
+		const sy = bodyCY + bodyR * .2;
+		const len = size * .14;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .3));
+		ctx.strokeStyle = "#f2f0f2";
+		ctx.lineWidth = size * .06;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.035 + handUp * .012), 0, TAU$1);
+		ctx.fill();
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	contactShadow(ctx, 0, bodyCY + bodyR * .6, bodyR * .6, bodyR * .25, 0, .12);
+	const bg = ctx.createRadialGradient(-bodyR * .3, bodyCY - bodyR * .3, bodyR * .1, 0, bodyCY, bodyR * 1.3);
+	bg.addColorStop(0, "#ffffff");
+	bg.addColorStop(1, "#e6e2e5");
+	ctx.fillStyle = bg;
+	ctx.beginPath();
+	ctx.ellipse(0, bodyCY, bodyR * .82, bodyR, 0, 0, TAU$1);
+	ctx.fill();
+	furFringe(ctx, () => ctx.ellipse(0, bodyCY, bodyR * .8, bodyR * .98, 0, 0, TAU$1), "rgba(255,255,255,0.7)", size * .014);
+	const tg = ctx.createRadialGradient(-size * .01, bodyCY + bodyR * .8, 0, 0, bodyCY + bodyR * .85, size * .06);
+	tg.addColorStop(0, "#ffffff");
+	tg.addColorStop(1, "#e2dde0");
+	ctx.fillStyle = tg;
+	ctx.beginPath();
+	ctx.arc(0, bodyCY + bodyR * .85, size * .05, 0, TAU$1);
+	ctx.fill();
+	contactShadow(ctx, 0, headCY + headR * .65, headR * .55, headR * .2, 0, .13);
+	const hg = ctx.createRadialGradient(-headR * .3, headCY - headR * .35, headR * .08, 0, headCY, headR * 1.2);
+	hg.addColorStop(0, "#ffffff");
+	hg.addColorStop(1, "#e9e5e8");
+	ctx.fillStyle = hg;
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(0, headCY, headR, 0, TAU$1);
+	ctx.clip();
+	topSheen(ctx, headCY - headR, headR * 1.1, headR, .2);
+	ctx.restore();
+	const alarmed = look.eyeScale > 1.2;
+	const unsure = look.mouth === "wavy";
+	const earLift = alarmed ? 1.15 : unsure ? .2 : .75;
+	[-1, 1].forEach((s) => {
+		ctx.save();
+		ctx.translate(s * headR * .48, headCY - headR * .68);
+		const wig = Math.sin(look.legPhase * .4 + s) * .04;
+		ctx.rotate(s * (.08 - earLift * .2) + wig);
+		contactShadow(ctx, 0, -size * .05, size * .05, size * .15, 0, .08);
+		const g = ctx.createLinearGradient(-size * .03, 0, size * .03, -size * .55);
+		g.addColorStop(0, "#f2f0f2");
+		g.addColorStop(1, "#ffffff");
+		ctx.fillStyle = g;
+		ctx.beginPath();
+		ctx.ellipse(0, -size * .3 * (.5 + earLift * .5), size * .062, size * .32, 0, 0, TAU$1);
+		ctx.fill();
+		const ig = ctx.createLinearGradient(0, 0, 0, -size * .5);
+		ig.addColorStop(0, "#ffc9d6");
+		ig.addColorStop(1, "#ffe4ea");
+		ctx.fillStyle = ig;
+		ctx.beginPath();
+		ctx.ellipse(0, -size * .3 * (.5 + earLift * .5), size * .03, size * .22, 0, 0, TAU$1);
+		ctx.fill();
+		ctx.restore();
+	});
+	const eyeDX = headR * .36;
+	const eyeY = headCY + headR * .03;
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, headR * .23, look, "#8a5a3a", "#2a1a10");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - headR * .32, headR * .27, look, "#c9a0aa");
+	cheekBlush(ctx, -headR * .55, eyeY + headR * .4, headR * .16, headR * .09, .45);
+	cheekBlush(ctx, headR * .55, eyeY + headR * .4, headR * .16, headR * .09, .45);
+	const noseCY = eyeY + headR * .38;
+	const ng = ctx.createRadialGradient(-headR * .01, noseCY - headR * .02, 0, 0, noseCY, headR * .06);
+	ng.addColorStop(0, "#ffb0c0");
+	ng.addColorStop(1, "#ff7f96");
+	ctx.fillStyle = ng;
+	ctx.beginPath();
+	ctx.ellipse(0, noseCY, headR * .06, headR * .045, 0, 0, TAU$1);
+	ctx.fill();
+	noseShine(ctx, -headR * .01, noseCY - headR * .015, headR * .03);
+	ctx.strokeStyle = "#ff8fa3";
+	ctx.lineWidth = headR * .045;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = headR * (.1 + look.mouthOpen * .07);
+	ctx.moveTo(-mw, noseCY + headR * .1);
+	ctx.quadraticCurveTo(0, noseCY + headR * (.16 + look.mouthOpen * .15), mw, noseCY + headR * .1);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawBrain(ctx, x, y, size, look) {
+	const w = size * .86;
+	const h = size * .82;
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .4 + look.spin * .7);
+	drawGroundShadow(ctx, w * .8, size, .16);
+	const bodyCY = -size * .46;
+	const legLift = Math.sin(look.legPhase) * size * .02;
+	[-1, 1].forEach((s, i) => {
+		const lift = i === 0 ? legLift : -legLift;
+		ctx.strokeStyle = "#e8879a";
+		ctx.lineWidth = size * .06;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(s * w * .18, bodyCY + h * .42);
+		ctx.lineTo(s * w * .18, -size * .03 + Math.abs(lift));
+		ctx.stroke();
+		const fg = ctx.createRadialGradient(s * w * .18 - size * .02, -size * .05, size * .01, s * w * .18, -size * .02, size * .07);
+		fg.addColorStop(0, "#ffb7c4");
+		fg.addColorStop(1, "#e8879a");
+		ctx.fillStyle = fg;
+		ctx.beginPath();
+		ctx.ellipse(s * w * .18, -size * .01 + Math.abs(lift), size * .065, size * .032, 0, 0, TAU$1);
+		ctx.fill();
+	});
+	contactShadow(ctx, 0, bodyCY + h * .5, w * .55, h * .2, 0, .14);
+	const isThinking = look.mouth === "wavy" && look.browL > .15;
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * w * .46;
+		const sy = bodyCY + h * .02;
+		ctx.save();
+		ctx.translate(sx, sy);
+		if (isThinking) {
+			ctx.rotate(side * 1.35);
+			const len = size * .22;
+			ctx.strokeStyle = "#e8879a";
+			ctx.lineWidth = size * .055;
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(0, len);
+			ctx.stroke();
+			ctx.fillStyle = "#ffb7c4";
+			ctx.beginPath();
+			ctx.arc(0, len, size * .045, 0, TAU$1);
+			ctx.fill();
+		} else {
+			ctx.rotate(side * (angle - .2));
+			const len = size * .24;
+			ctx.strokeStyle = "#e8879a";
+			ctx.lineWidth = size * .055;
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(0, len);
+			ctx.stroke();
+			ctx.fillStyle = "#ffb7c4";
+			ctx.beginPath();
+			ctx.arc(0, len, size * (.045 + handUp * .014), 0, TAU$1);
+			ctx.fill();
+		}
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	const brainPath = () => {
+		ctx.beginPath();
+		ctx.moveTo(-w * .035, bodyCY - h * .5);
+		ctx.bezierCurveTo(-w * .2, bodyCY - h * .59, -w * .43, bodyCY - h * .5, -w * .49, bodyCY - h * .26);
+		ctx.bezierCurveTo(-w * .56, bodyCY - h * .16, -w * .5, bodyCY - h * .02, -w * .43, bodyCY + h * .08);
+		ctx.bezierCurveTo(-w * .51, bodyCY + h * .18, -w * .43, bodyCY + h * .31, -w * .32, bodyCY + h * .33);
+		ctx.bezierCurveTo(-w * .36, bodyCY + h * .46, -w * .2, bodyCY + h * .51, -w * .065, bodyCY + h * .4);
+		ctx.bezierCurveTo(-w * .03, bodyCY + h * .47, -w * .01, bodyCY + h * .47, 0, bodyCY + h * .42);
+		ctx.bezierCurveTo(w * .06, bodyCY + h * .51, w * .23, bodyCY + h * .46, w * .31, bodyCY + h * .34);
+		ctx.bezierCurveTo(w * .43, bodyCY + h * .3, w * .51, bodyCY + h * .17, w * .44, bodyCY + h * .07);
+		ctx.bezierCurveTo(w * .53, bodyCY - h * .03, w * .55, bodyCY - h * .17, w * .48, bodyCY - h * .29);
+		ctx.bezierCurveTo(w * .39, bodyCY - h * .51, w * .2, bodyCY - h * .57, w * .035, bodyCY - h * .5);
+		ctx.bezierCurveTo(w * .015, bodyCY - h * .57, -w * .015, bodyCY - h * .57, -w * .035, bodyCY - h * .5);
+		ctx.closePath();
+	};
+	const grad = ctx.createRadialGradient(-w * .2, bodyCY - h * .3, size * .05, w * .05, bodyCY + h * .1, w * .75);
+	grad.addColorStop(0, "#ffb7c4");
+	grad.addColorStop(.55, "#f28aa0");
+	grad.addColorStop(1, "#d85f7e");
+	brainPath();
+	ctx.fillStyle = grad;
+	ctx.fill();
+	ctx.save();
+	brainPath();
+	ctx.clip();
+	ctx.strokeStyle = "rgba(150,50,80,0.4)";
+	ctx.lineWidth = size * .018;
+	[
+		[
+			-1,
+			-.36,
+			-.08,
+			.02
+		],
+		[
+			-1,
+			-.2,
+			.16,
+			-.03
+		],
+		[
+			-1,
+			-.03,
+			.3,
+			.04
+		],
+		[
+			-1,
+			.14,
+			.18,
+			-.04
+		],
+		[
+			-1,
+			.28,
+			.38,
+			.03
+		],
+		[
+			1,
+			-.34,
+			.04,
+			-.03
+		],
+		[
+			1,
+			-.16,
+			.2,
+			.04
+		],
+		[
+			1,
+			.02,
+			.34,
+			-.02
+		],
+		[
+			1,
+			.17,
+			.15,
+			.04
+		],
+		[
+			1,
+			.29,
+			.36,
+			-.03
+		]
+	].forEach(([side, fy, curve, wave]) => {
+		ctx.beginPath();
+		const baseX = side * w * (.2 + Math.abs(wave) * .4);
+		const y0 = bodyCY + h * fy;
+		ctx.moveTo(baseX - side * w * .16, y0 - h * .04);
+		ctx.bezierCurveTo(baseX + side * w * (.02 + wave), y0 + h * (.08 + curve * .08), baseX + side * w * (.12 - wave), y0 - h * (.08 - curve * .04), baseX + side * w * .2, y0 - h * .03);
+		ctx.stroke();
+	});
+	topSheen(ctx, bodyCY - h * .56, h * .5, w * .6, .22);
+	ctx.restore();
+	furFringe(ctx, brainPath, "rgba(255,255,255,0.2)", size * .014);
+	const eyeY = bodyCY + h * .08;
+	const discR = size * .135;
+	const eyeDX = w * .19;
+	cheekBlush(ctx, -w * .32, eyeY + discR * .75, w * .06, h * .03, .4);
+	cheekBlush(ctx, w * .32, eyeY + discR * .75, w * .06, h * .03, .4);
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, discR, look, "#6aa6e8", "#1a2c52");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - discR * .95, discR, look, "#b04565");
+	const my = eyeY + discR * 1.05;
+	ctx.strokeStyle = "#a83a58";
+	ctx.lineWidth = size * .022;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = size * (.05 + look.mouthOpen * .03);
+	ctx.moveTo(-mw, my);
+	ctx.quadraticCurveTo(0, my + size * (.04 + look.mouthOpen * .08), mw, my);
+	ctx.stroke();
+	if (look.mouthOpen > .3) {
+		ctx.fillStyle = "#7a2842";
+		ctx.beginPath();
+		ctx.ellipse(0, my + size * .03 * look.mouthOpen, size * .018, size * .014 * look.mouthOpen, 0, 0, TAU$1);
+		ctx.fill();
+	}
+	if (look.mouth === "big" && look.mouthOpen > .4) [
+		[-.3, -.5],
+		[.34, -.42],
+		[0, -.58]
+	].forEach(([sx, sy]) => {
+		ctx.save();
+		ctx.translate(w * sx, bodyCY + h * sy);
+		ctx.fillStyle = "#fff6c8";
+		for (let i = 0; i < 4; i++) {
+			ctx.rotate(Math.PI / 2 * i + look.spin * 3);
+			ctx.beginPath();
+			ctx.moveTo(0, -size * .028);
+			ctx.lineTo(size * .006, 0);
+			ctx.lineTo(0, size * .028);
+			ctx.lineTo(-size * .006, 0);
+			ctx.closePath();
+			ctx.fill();
+		}
+		ctx.restore();
+	});
+	ctx.restore();
+}
+function drawEgg(ctx, x, y, size, look) {
+	const wTop = size * .42;
+	const wBottom = size * .58;
+	const h = size * .92;
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .4 + look.spin * .6);
+	drawGroundShadow(ctx, wBottom * 1.5, size, .18);
+	const bodyCY = -h * .52;
+	const bottomY = -size * .02;
+	const topY = bodyCY - h * .5;
+	const legLift = Math.sin(look.legPhase) * size * .018;
+	[-1, 1].forEach((s, i) => {
+		const lift = i === 0 ? legLift : -legLift;
+		ctx.strokeStyle = "#f0c948";
+		ctx.lineWidth = size * .05;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(s * wBottom * .32, bottomY - size * .02);
+		ctx.lineTo(s * wBottom * .32, -size * .01 + Math.abs(lift));
+		ctx.stroke();
+		ctx.fillStyle = "#ffdb70";
+		ctx.beginPath();
+		ctx.ellipse(s * wBottom * .32, size * .005 + Math.abs(lift), size * .06, size * .026, 0, 0, TAU$1);
+		ctx.fill();
+	});
+	contactShadow(ctx, 0, bottomY + size * .02, wBottom * .7, size * .06, 0, .15);
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * wBottom * .62;
+		const sy = bodyCY + h * .12;
+		const len = size * .18;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .25));
+		ctx.strokeStyle = "#f0c948";
+		ctx.lineWidth = size * .05;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#ffdb70";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.04 + handUp * .012), 0, TAU$1);
+		ctx.fill();
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	const eggPath = () => {
+		ctx.beginPath();
+		ctx.moveTo(0, topY);
+		ctx.bezierCurveTo(wTop * .92, topY + h * .06, wBottom * .98, bodyCY + h * .18, wBottom, bottomY - h * .02);
+		ctx.bezierCurveTo(wBottom * .98, bottomY + h * .14, -wBottom * .98, bottomY + h * .14, -wBottom, bottomY - h * .02);
+		ctx.bezierCurveTo(-wBottom * .98, bodyCY + h * .18, -wTop * .92, topY + h * .06, 0, topY);
+		ctx.closePath();
+	};
+	const grad = ctx.createRadialGradient(-wBottom * .25, bodyCY - h * .3, size * .04, wBottom * .05, bodyCY + h * .15, wBottom * 1.4);
+	grad.addColorStop(0, "#fffdf5");
+	grad.addColorStop(.55, "#fff3d6");
+	grad.addColorStop(1, "#ffe2a0");
+	eggPath();
+	ctx.fillStyle = grad;
+	ctx.fill();
+	ctx.save();
+	eggPath();
+	ctx.clip();
+	const sheen = ctx.createLinearGradient(-wBottom * .5, topY, wBottom * .1, bottomY);
+	sheen.addColorStop(0, "rgba(255,255,255,0.75)");
+	sheen.addColorStop(.35, "rgba(255,255,255,0.15)");
+	sheen.addColorStop(.5, "rgba(255,255,255,0)");
+	ctx.fillStyle = sheen;
+	ctx.fillRect(-wBottom, topY, wBottom * 2, h);
+	ctx.fillStyle = "rgba(255,255,255,0.55)";
+	ctx.beginPath();
+	ctx.ellipse(-wTop * .35, topY + h * .18, wTop * .22, h * .1, -.3, 0, TAU$1);
+	ctx.fill();
+	const baseOcc = ctx.createLinearGradient(0, bottomY - h * .18, 0, bottomY);
+	baseOcc.addColorStop(0, "rgba(200,140,40,0)");
+	baseOcc.addColorStop(1, "rgba(200,140,40,0.18)");
+	ctx.fillStyle = baseOcc;
+	ctx.fillRect(-wBottom, bottomY - h * .18, wBottom * 2, h * .18);
+	ctx.restore();
+	ctx.strokeStyle = "rgba(210,160,60,0.4)";
+	ctx.lineWidth = size * .014;
+	eggPath();
+	ctx.stroke();
+	const eyeY = bodyCY + h * .14;
+	const discR = size * .13;
+	const eyeDX = wBottom * .32;
+	cheekBlush(ctx, -eyeDX * 1.4, eyeY + discR * .75, wBottom * .1, h * .03, .4);
+	cheekBlush(ctx, eyeDX * 1.4, eyeY + discR * .75, wBottom * .1, h * .03, .4);
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, discR, look, "#7fcf8a", "#1c3d24");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - discR * .95, discR, look, "#d9a840");
+	const my = eyeY + discR * 1.05;
+	ctx.strokeStyle = "#d9873a";
+	ctx.lineWidth = size * .02;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = size * (.045 + look.mouthOpen * .025);
+	ctx.moveTo(-mw, my);
+	ctx.quadraticCurveTo(0, my + size * (.035 + look.mouthOpen * .07), mw, my);
+	ctx.stroke();
+	if (look.sweat > 0) {
+		ctx.fillStyle = `rgba(96,190,255,${.85 * look.sweat})`;
+		ctx.beginPath();
+		ctx.ellipse(wBottom * .72, bodyCY - h * .1, size * .02, size * .03, 0, 0, TAU$1);
+		ctx.fill();
+	}
+	ctx.restore();
+}
+function drawBulb(ctx, x, y, size, look) {
+	const w = size * .68;
+	const h = size * .88;
+	ctx.save();
+	ctx.translate(x + look.shakeX * size, y - look.bounce * size);
+	ctx.rotate(look.tilt * .4 + look.spin * .6);
+	drawGroundShadow(ctx, w * 1.1, size, .18);
+	const glowPulse = .6 + .4 * Math.sin(look.legPhase * 1.4 + look.spin * 2);
+	const glowAlpha = .22 + glowPulse * .18 + (look.mouthOpen > .5 ? .15 : 0);
+	ctx.save();
+	ctx.globalAlpha = glowAlpha;
+	const halo = ctx.createRadialGradient(0, -h * .35, size * .05, 0, -h * .3, w * 1.4);
+	halo.addColorStop(0, "#fff3b0");
+	halo.addColorStop(1, "rgba(255,243,176,0)");
+	ctx.fillStyle = halo;
+	ctx.beginPath();
+	ctx.arc(0, -h * .3, w * 1.4, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+	const bottomY = -size * .02;
+	const baseTopY = bottomY - h * .16;
+	const bodyCY = -h * .5;
+	const topY = bodyCY - h * .46;
+	const legLift = Math.sin(look.legPhase) * size * .02;
+	[-1, 1].forEach((s, i) => {
+		const lift = i === 0 ? legLift : -legLift;
+		ctx.strokeStyle = "#c9a24a";
+		ctx.lineWidth = size * .05;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(s * w * .22, bottomY);
+		ctx.lineTo(s * w * .22, -size * .01 + Math.abs(lift));
+		ctx.stroke();
+		ctx.fillStyle = "#e8c463";
+		ctx.beginPath();
+		ctx.ellipse(s * w * .22, size * .005 + Math.abs(lift), size * .06, size * .026, 0, 0, TAU$1);
+		ctx.fill();
+	});
+	contactShadow(ctx, 0, baseTopY + h * .03, w * .5, size * .05, 0, .16);
+	const drawArm = (side, angle, handUp) => {
+		const sx = side * w * .5;
+		const sy = bodyCY + h * .1;
+		const len = size * .18;
+		ctx.save();
+		ctx.translate(sx, sy);
+		ctx.rotate(side * (angle - .25));
+		ctx.strokeStyle = "#e8c463";
+		ctx.lineWidth = size * .05;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(0, len);
+		ctx.stroke();
+		ctx.fillStyle = "#fff0a8";
+		ctx.beginPath();
+		ctx.arc(0, len, size * (.04 + handUp * .012), 0, TAU$1);
+		ctx.fill();
+		ctx.restore();
+	};
+	drawArm(-1, look.armL, look.handLUp);
+	drawArm(1, look.armR, look.handRUp);
+	const baseW = w * .42;
+	const baseH = h * .18;
+	const baseGrad = ctx.createLinearGradient(-baseW, baseTopY, baseW, bottomY);
+	baseGrad.addColorStop(0, "#b8b8bc");
+	baseGrad.addColorStop(.5, "#8a8a90");
+	baseGrad.addColorStop(1, "#6a6a70");
+	ctx.fillStyle = baseGrad;
+	ctx.beginPath();
+	ctx.moveTo(-baseW, baseTopY);
+	ctx.lineTo(baseW, baseTopY);
+	ctx.lineTo(baseW * .75, bottomY - baseH * .15);
+	ctx.quadraticCurveTo(0, bottomY, -baseW * .75, bottomY - baseH * .15);
+	ctx.closePath();
+	ctx.fill();
+	ctx.strokeStyle = "rgba(0,0,0,0.25)";
+	ctx.lineWidth = size * .012;
+	for (let i = 1; i <= 3; i++) {
+		const ty = baseTopY + baseH * i / 4;
+		const tw = baseW * (1 - i * .06);
+		ctx.beginPath();
+		ctx.moveTo(-tw, ty);
+		ctx.lineTo(tw, ty);
+		ctx.stroke();
+	}
+	const bulbPath = () => {
+		ctx.beginPath();
+		ctx.moveTo(-w * .32, baseTopY + h * .02);
+		ctx.bezierCurveTo(-w * .62, baseTopY - h * .14, -w * .62, bodyCY - h * .1, -w * .5, bodyCY - h * .28);
+		ctx.bezierCurveTo(-w * .36, bodyCY - h * .5, -w * .16, topY, 0, topY);
+		ctx.bezierCurveTo(w * .16, topY, w * .36, bodyCY - h * .5, w * .5, bodyCY - h * .28);
+		ctx.bezierCurveTo(w * .62, bodyCY - h * .1, w * .62, baseTopY - h * .14, w * .32, baseTopY + h * .02);
+		ctx.closePath();
+	};
+	const glass = ctx.createRadialGradient(-w * .25, bodyCY - h * .3, size * .06, w * .05, bodyCY, w * 1.1);
+	glass.addColorStop(0, "#fffde8");
+	glass.addColorStop(.45, "#fff3b0");
+	glass.addColorStop(1, "#ffd75e");
+	bulbPath();
+	ctx.fillStyle = glass;
+	ctx.fill();
+	ctx.save();
+	bulbPath();
+	ctx.clip();
+	topSheen(ctx, topY, h * .55, w, .3);
+	ctx.fillStyle = "rgba(255,255,255,0.5)";
+	ctx.beginPath();
+	ctx.ellipse(-w * .28, bodyCY - h * .32, w * .16, h * .14, -.3, 0, TAU$1);
+	ctx.fill();
+	ctx.save();
+	ctx.globalAlpha = .25 + glowPulse * .2;
+	const innerGlow = ctx.createRadialGradient(0, bodyCY + h * .12, size * .02, 0, bodyCY + h * .12, w * .55);
+	innerGlow.addColorStop(0, "#ffe98a");
+	innerGlow.addColorStop(1, "rgba(255,233,138,0)");
+	ctx.fillStyle = innerGlow;
+	ctx.beginPath();
+	ctx.arc(0, bodyCY + h * .12, w * .55, 0, TAU$1);
+	ctx.fill();
+	ctx.restore();
+	ctx.restore();
+	furFringe(ctx, bulbPath, "rgba(255,255,255,0.25)", size * .012);
+	ctx.save();
+	ctx.globalAlpha = .55 + glowPulse * .35;
+	ctx.lineWidth = size * .018;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	ctx.moveTo(-w * .12, bodyCY + h * .3);
+	ctx.lineTo(-w * .04, bodyCY + h * .16);
+	ctx.lineTo(w * .04, bodyCY + h * .3);
+	ctx.lineTo(w * .12, bodyCY + h * .16);
+	ctx.stroke();
+	ctx.restore();
+	if (look.mouth === "big" || glowPulse > .75) {
+		const rayAlpha = look.mouthOpen > .4 ? .85 : .4 + glowPulse * .3;
+		ctx.save();
+		ctx.globalAlpha = rayAlpha;
+		ctx.strokeStyle = "#ffd75e";
+		ctx.lineWidth = size * .02;
+		ctx.lineCap = "round";
+		for (let i = 0; i < 6; i++) {
+			const a = i / 6 * TAU$1 + look.spin * 2;
+			const r1 = w * .72;
+			const r2 = w * .9;
+			ctx.beginPath();
+			ctx.moveTo(Math.cos(a) * r1, bodyCY - h * .1 + Math.sin(a) * r1 * .7);
+			ctx.lineTo(Math.cos(a) * r2, bodyCY - h * .1 + Math.sin(a) * r2 * .7);
+			ctx.stroke();
+		}
+		ctx.restore();
+	}
+	const eyeY = bodyCY + h * .02;
+	const discR = size * .13;
+	const eyeDX = w * .28;
+	cheekBlush(ctx, -w * .42, eyeY + discR * .7, w * .09, h * .03, .42);
+	cheekBlush(ctx, w * .42, eyeY + discR * .7, w * .09, h * .03, .42);
+	drawExpressiveEyes(ctx, -eyeDX, eyeDX, eyeY, discR, look, "#6aa6e8", "#1a2c52");
+	drawBrows(ctx, -eyeDX, eyeDX, eyeY - discR * .95, discR, look, "#d9a13a");
+	const my = eyeY + discR * 1.02;
+	ctx.strokeStyle = "#d9873a";
+	ctx.lineWidth = size * .02;
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	const mw = size * (.05 + look.mouthOpen * .03);
+	ctx.moveTo(-mw, my);
+	ctx.quadraticCurveTo(0, my + size * (.04 + look.mouthOpen * .08), mw, my);
+	ctx.stroke();
+	if (look.mouthOpen > .3) {
+		ctx.fillStyle = "#a8632a";
+		ctx.beginPath();
+		ctx.ellipse(0, my + size * .03 * look.mouthOpen, size * .018, size * .014 * look.mouthOpen, 0, 0, TAU$1);
+		ctx.fill();
 	}
 	ctx.restore();
 }
@@ -2402,9 +4153,9 @@ function drawStar(ctx, x, y, r, color) {
 	ctx.fill();
 }
 var boardBgCache = null;
-function getBoardBackground(l, needsScrim) {
+function getBoardBackground(l, needsScrim, heading) {
 	const b = l.board;
-	const key = `${b.x}|${b.y}|${b.w}|${b.h}|${needsScrim}`;
+	const key = `${b.x}|${b.y}|${b.w}|${b.h}|${needsScrim}|${heading}`;
 	if (boardBgCache && boardBgCache.key === key) return boardBgCache;
 	const padX = b.w * .12;
 	const padY = b.h * .28;
@@ -2443,8 +4194,9 @@ function getBoardBackground(l, needsScrim) {
 	c.fillStyle = "#ffffff";
 	c.textAlign = "center";
 	c.textBaseline = "middle";
-	c.font = `800 ${hh * .52}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
-	c.fillText("GK QUIZ", b.w * .5, hh * .08);
+	const { size } = fitTextCached(c, heading, b.w * .8, hh * .62, hh * .52);
+	c.font = `800 ${size}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
+	c.fillText(heading, b.w * .5, hh * .08);
 	boardBgCache = {
 		key,
 		canvas,
@@ -2453,6 +4205,21 @@ function getBoardBackground(l, needsScrim) {
 	};
 	return boardBgCache;
 }
+function drawHeadingRibbon(ctx, b, heading) {
+	const hh = b.h * .13;
+	const hg = ctx.createLinearGradient(b.x + b.w * .06, b.y - hh * .42, b.x + b.w * .94, b.y + hh * .58);
+	hg.addColorStop(0, "#132a5c");
+	hg.addColorStop(1, "#0b1a3d");
+	ctx.fillStyle = hg;
+	roundRect(ctx, b.x + b.w * .06, b.y - hh * .42, b.w * .88, hh, hh * .5);
+	ctx.fill();
+	ctx.fillStyle = "#ffffff";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	const { size } = fitTextCached(ctx, heading, b.w * .8, hh * .62, hh * .52);
+	ctx.font = `800 ${size}px 'Baloo 2', 'Nunito', system-ui, sans-serif`;
+	ctx.fillText(heading, b.x + b.w * .5, b.y + hh * .08);
+}
 function drawBoard(ctx, quiz, s, l, t, needsScrim = false) {
 	const b = l.board;
 	const inP = clamp01$1(s.boardIn);
@@ -2460,8 +4227,11 @@ function drawBoard(ctx, quiz, s, l, t, needsScrim = false) {
 	ctx.save();
 	ctx.globalAlpha = Math.min(1, inP * 1.5);
 	ctx.translate(0, yOff);
-	const bg = getBoardBackground(l, needsScrim);
-	ctx.drawImage(bg.canvas, b.x - bg.padX, b.y - bg.padY);
+	const heading = QUIZ_TYPES.find((q) => q.id === quiz.quizType)?.heading ?? "GK QUIZ";
+	if (quiz.showBoard !== false) {
+		const bg = getBoardBackground(l, needsScrim, heading);
+		ctx.drawImage(bg.canvas, b.x - bg.padX, b.y - bg.padY);
+	} else drawHeadingRibbon(ctx, b, heading);
 	const qArea = {
 		x: b.x + b.w * .06,
 		y: b.y + b.h * .16,
@@ -2667,10 +4437,10 @@ function drawThoughtBubble(ctx, x, y, r, t) {
 	ctx.restore();
 }
 var litCanvas = null;
-/** Draw the owl, then wash it with the scene's light colour so it sits in the world. */
-function drawOwlLit(ctx, x, y, size, look, tint, tintAlpha, w, h) {
+/** Draw the selected character, then wash it with the scene's light colour so it sits in the world. */
+function drawCharacterLit(ctx, characterId, x, y, size, look, tint, tintAlpha, w, h) {
 	if (tintAlpha <= 0 || typeof document === "undefined") {
-		drawOwl(ctx, x, y, size, look);
+		drawCharacter(ctx, characterId, x, y, size, look);
 		return;
 	}
 	if (!litCanvas) litCanvas = document.createElement("canvas");
@@ -2680,13 +4450,13 @@ function drawOwlLit(ctx, x, y, size, look, tint, tintAlpha, w, h) {
 	}
 	const lc = litCanvas.getContext("2d");
 	if (!lc) {
-		drawOwl(ctx, x, y, size, look);
+		drawCharacter(ctx, characterId, x, y, size, look);
 		return;
 	}
 	lc.setTransform(1, 0, 0, 1, 0, 0);
 	lc.clearRect(0, 0, w, h);
 	lc.globalCompositeOperation = "source-over";
-	drawOwl(lc, x, y, size, look);
+	drawCharacter(lc, characterId, x, y, size, look);
 	lc.globalCompositeOperation = "source-atop";
 	lc.globalAlpha = tintAlpha;
 	lc.fillStyle = tint;
@@ -2709,22 +4479,22 @@ function drawFrame(ctx, quiz, s, w, h, runKey = 0) {
 	const scene = getScene(quiz.background);
 	scene.draw(ctx, w, h, t);
 	drawBoard(ctx, quiz, s, l, t, scene.dark);
-	const owlX = l.owl.x + s.owlX * (l.portrait ? w * .22 : w * .12);
+	const charX = l.owl.x + s.owlX * (l.portrait ? w * .22 : w * .12);
 	ctx.save();
 	ctx.globalAlpha = clamp01$1(s.owlEnter * 1.4);
-	const rim = ctx.createRadialGradient(owlX, l.owl.y - l.owl.size * .45, l.owl.size * .1, owlX, l.owl.y - l.owl.size * .45, l.owl.size * .85);
+	const rim = ctx.createRadialGradient(charX, l.owl.y - l.owl.size * .45, l.owl.size * .1, charX, l.owl.y - l.owl.size * .45, l.owl.size * .85);
 	rim.addColorStop(0, scene.light.rim);
 	rim.addColorStop(1, "rgba(255,255,255,0)");
 	ctx.save();
 	ctx.globalAlpha *= scene.light.rimAlpha;
 	ctx.fillStyle = rim;
 	ctx.beginPath();
-	ctx.arc(owlX, l.owl.y - l.owl.size * .45, l.owl.size * .85, 0, TAU);
+	ctx.arc(charX, l.owl.y - l.owl.size * .45, l.owl.size * .85, 0, TAU);
 	ctx.fill();
 	ctx.restore();
-	drawOwlLit(ctx, owlX, l.owl.y, l.owl.size, poseToLook(s, t), scene.light.tint, scene.light.tintAlpha, w, h);
+	drawCharacterLit(ctx, quiz.character, charX, l.owl.y, l.owl.size, poseToLook(s, t), scene.light.tint, scene.light.tintAlpha, w, h);
 	ctx.restore();
-	if (s.pose === "think" || s.reaction === "thinking") drawThoughtBubble(ctx, owlX - l.owl.size * .42, l.owl.y - l.owl.size * 1.05, l.owl.size * .11, t);
+	if (s.pose === "think" || s.reaction === "thinking") drawThoughtBubble(ctx, charX - l.owl.size * .42, l.owl.y - l.owl.size * 1.05, l.owl.size * .11, t);
 	drawCountdown(ctx, s, w, h, l);
 	drawCelebration(ctx, s, w, h, runKey);
 	ctx.restore();
@@ -3226,10 +4996,11 @@ function parseQuizCsv(text) {
 		errors
 	};
 }
-function csvRowToQuiz(row, base) {
+function csvRowToQuiz(row, base, character = base.character) {
 	return {
 		...DEFAULT_QUIZ,
 		...base,
+		character,
 		question: row.question,
 		options: row.options,
 		correct: row.correct,
@@ -3237,9 +5008,32 @@ function csvRowToQuiz(row, base) {
 		showExplanation: true
 	};
 }
-var VIDEO_BITRATE = 8e6;
+var VIDEO_QUALITY_CONFIG = {
+	"1080p": {
+		width: 1920,
+		bitrate: 8e6
+	},
+	"2k": {
+		width: 2560,
+		bitrate: 16e6
+	},
+	"4k": {
+		width: 3840,
+		bitrate: 32e6
+	}
+};
 var AUDIO_BITRATE = 16e4;
-async function pickCodecs(width, height) {
+function getVideoDimensions(quality, orientation) {
+	const { width } = VIDEO_QUALITY_CONFIG[quality];
+	return orientation === "landscape" ? {
+		width,
+		height: width * 9 / 16
+	} : {
+		width: width * 9 / 16,
+		height: width
+	};
+}
+async function pickCodecs(width, height, videoBitrate) {
 	const videoCodec = await getFirstEncodableVideoCodec([
 		"avc",
 		"hevc",
@@ -3248,7 +5042,7 @@ async function pickCodecs(width, height) {
 	], {
 		width,
 		height,
-		bitrate: VIDEO_BITRATE
+		bitrate: videoBitrate
 	});
 	if (!videoCodec) throw new Error("This browser cannot encode video (WebCodecs unsupported).");
 	const useMp4 = videoCodec === "avc" || videoCodec === "hevc";
@@ -3269,6 +5063,7 @@ function nextFrame() {
 }
 async function renderVideo(opts) {
 	const { quiz, timeline, width, height, audio, audioSettings, onProgress } = opts;
+	const videoBitrate = opts.videoBitrate ?? VIDEO_QUALITY_CONFIG["1080p"].bitrate;
 	onProgress({
 		stage: "Preparing animation...",
 		percent: 2
@@ -3286,7 +5081,7 @@ async function renderVideo(opts) {
 	console.log("[export] Narration capture:", narrationOk);
 	audio.ensure();
 	audio.apply(audioSettings);
-	const { videoCodec, audioCodec, useMp4 } = await pickCodecs(width, height);
+	const { videoCodec, audioCodec, useMp4 } = await pickCodecs(width, height, videoBitrate);
 	console.log("[export] Codecs selected:", {
 		videoCodec,
 		audioCodec,
@@ -3303,7 +5098,7 @@ async function renderVideo(opts) {
 	if (!videoTrack) throw new Error("Unable to capture the canvas as a video track.");
 	const videoSource = new MediaStreamVideoTrackSource(videoTrack, {
 		codec: videoCodec,
-		bitrate: VIDEO_BITRATE
+		bitrate: videoBitrate
 	});
 	output.addVideoTrack(videoSource, { frameRate: fps });
 	videoSource.errorPromise.catch((error) => {
@@ -3453,7 +5248,7 @@ function downloadBlob(blob, filename) {
 	}, 4e3);
 }
 var wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-function CsvBatchPanel({ baseQuiz, orientation, audio, audioSettings }) {
+function CsvBatchPanel({ baseQuiz, orientation, videoQuality, audio, audioSettings }) {
 	const inputRef = (0, import_react.useRef)(null);
 	const [videos, setVideos] = (0, import_react.useState)([]);
 	const [errors, setErrors] = (0, import_react.useState)([]);
@@ -3502,13 +5297,13 @@ function CsvBatchPanel({ baseQuiz, orientation, audio, audioSettings }) {
 			};
 		}));
 		try {
-			const quiz = csvRowToQuiz(video.row, baseQuiz);
+			const quiz = csvRowToQuiz(video.row, baseQuiz, baseQuiz.character);
 			const isFirstQuestion = video.number === 1;
 			const result = await renderVideo({
 				quiz,
 				timeline: buildTimeline(quiz, crypto.getRandomValues(/* @__PURE__ */ new Uint32Array(1))[0], isFirstQuestion),
-				width: orientation === "landscape" ? 1920 : 1080,
-				height: orientation === "landscape" ? 1080 : 1920,
+				...getVideoDimensions(videoQuality, orientation),
+				videoBitrate: videoQuality === "4k" ? 32e6 : videoQuality === "2k" ? 16e6 : 8e6,
 				audio,
 				audioSettings,
 				onProgress: ({ percent, stage }) => update(video.id, {
@@ -3577,13 +5372,20 @@ function CsvBatchPanel({ baseQuiz, orientation, audio, audioSettings }) {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex flex-wrap items-start justify-between gap-3",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
-						className: "flex items-center gap-2 font-display text-xl font-extrabold",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "size-5 text-primary" }), "Upload CSV & Generate Videos"]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "mt-1 text-sm text-muted-foreground",
-						children: "One CSV row becomes one independently downloadable quiz video, with narration baked into the MP4."
-					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+							className: "flex items-center gap-2 font-display text-xl font-extrabold",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "size-5 text-primary" }), "Upload CSV & Generate Videos"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 text-sm text-muted-foreground",
+							children: "One CSV row becomes one independently downloadable quiz video, with narration baked into the MP4."
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "mt-1 text-sm font-semibold text-primary",
+							children: ["Character: ", CHARACTERS.find((character) => character.id === baseQuiz.character)?.name ?? baseQuiz.character]
+						})
+					] }),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 						ref: inputRef,
 						type: "file",
@@ -4186,6 +5988,32 @@ function validateQuiz(quiz) {
 	return issues;
 }
 var hasErrors = (issues) => issues.some((i) => i.level === "error");
+var Route = createFileRoute("/")({
+	head: () => ({ meta: [
+		{ title: "Owl Quiz Studio — Kids GK Quiz Video Generator" },
+		{
+			name: "description",
+			content: "Create animated 1080p kids general-knowledge quiz videos with a cute 3D owl mascot, countdown, answer reveal and confetti celebration."
+		},
+		{
+			property: "og:title",
+			content: "Owl Quiz Studio — Kids GK Quiz Video Generator"
+		},
+		{
+			property: "og:description",
+			content: "Type a question, hit create, and export a polished animated kids quiz video in landscape or portrait."
+		},
+		{
+			property: "og:type",
+			content: "website"
+		},
+		{
+			name: "twitter:card",
+			content: "summary_large_image"
+		}
+	] }),
+	component: Studio
+});
 var DEFAULT_AUDIO = {
 	voice: "Cute Child",
 	voiceVolume: 1,
@@ -4203,6 +6031,7 @@ function Studio() {
 	const [quiz, setQuiz] = (0, import_react.useState)(DEFAULT_QUIZ);
 	const [audioSettings, setAudioSettings] = (0, import_react.useState)(DEFAULT_AUDIO);
 	const [orientation, setOrientation] = (0, import_react.useState)("landscape");
+	const [videoQuality, setVideoQuality] = (0, import_react.useState)("1080p");
 	const [seed, setSeed] = (0, import_react.useState)(INITIAL_SEED);
 	const [playing, setPlaying] = (0, import_react.useState)(false);
 	const [time, setTime] = (0, import_react.useState)(0);
@@ -4241,18 +6070,20 @@ function Studio() {
 			percent: 0
 		});
 		try {
+			const { width, height } = getVideoDimensions(videoQuality, orientation);
 			const { blob, extension } = await renderVideo({
 				quiz,
 				timeline,
-				width: orientation === "landscape" ? 1920 : 1080,
-				height: orientation === "landscape" ? 1080 : 1920,
+				width,
+				height,
+				videoBitrate: videoQuality === "4k" ? 32e6 : videoQuality === "2k" ? 16e6 : 8e6,
 				audio: audioRef.current,
 				audioSettings,
 				onProgress: setProgress
 			});
-			downloadBlob(blob, `owl-quiz-${orientation}-1080p.${extension}`);
+			downloadBlob(blob, `owl-quiz-${orientation}-${videoQuality}.${extension}`);
 			const hadVoice = audioRef.current.hasNarrationCapture;
-			toast.success(hadVoice ? extension === "mp4" ? "Video rendered with narration and downloaded as MP4." : "Video rendered with narration. Your browser exports WebM (1080p) — playable everywhere and convertible to MP4." : "Video rendered, but narration capture wasn't granted — this file has SFX only. Click Render again and allow tab-audio sharing to include the voice.");
+			toast.success(hadVoice ? extension === "mp4" ? "Video rendered with narration and downloaded as MP4." : `Video rendered with narration. Your browser exports WebM (${videoQuality}) — playable everywhere and convertible to MP4.` : "Video rendered, but narration capture wasn't granted — this file has SFX only. Click Render again and allow tab-audio sharing to include the voice.");
 		} catch (e) {
 			toast.error(e instanceof Error ? e.message : "Rendering failed.");
 		} finally {
@@ -4302,6 +6133,7 @@ function Studio() {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CsvBatchPanel, {
 						baseQuiz: quiz,
 						orientation,
+						videoQuality,
 						audio: audioRef.current,
 						audioSettings
 					}),
@@ -4436,9 +6268,40 @@ function Studio() {
 										className: "font-display text-lg font-extrabold",
 										children: "Export"
 									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-sm font-bold",
+										htmlFor: "video-quality",
+										children: "Video quality"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										id: "video-quality",
+										value: videoQuality,
+										disabled: rendering,
+										onChange: (event) => setVideoQuality(event.target.value),
+										className: "h-10 w-full rounded-xl border border-input bg-background px-3 text-sm font-semibold",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "1080p",
+												children: "1080p · Full HD"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "2k",
+												children: "2K · QHD"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "4k",
+												children: "4K · Ultra HD"
+											})
+										]
+									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 										className: "text-sm text-muted-foreground",
-										children: [orientation === "landscape" ? "1920 × 1080 · 16:9" : "1080 × 1920 · 9:16", " · 30fps"]
+										children: [
+											getVideoDimensions(videoQuality, orientation).width,
+											" × ",
+											getVideoDimensions(videoQuality, orientation).height,
+											" · 30fps"
+										]
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 										variant: "hero",
@@ -4477,5 +6340,20 @@ function Studio() {
 		]
 	});
 }
+var rootRouteChildren = { IndexRoute: Route.update({
+	id: "/",
+	path: "/",
+	getParentRoute: () => Route$1
+}) };
+var routeTree = Route$1._addFileChildren(rootRouteChildren)._addFileTypes();
+var getRouter = () => {
+	const queryClient = new QueryClient();
+	return createRouter({
+		routeTree,
+		context: { queryClient },
+		scrollRestoration: true,
+		defaultPreloadStaleTime: 0
+	});
+};
 //#endregion
-export { Studio as component };
+export { getRouter };

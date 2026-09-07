@@ -21,8 +21,11 @@ import {
 
 import {
   downloadBlob,
+  getVideoBitrate,
   renderVideo,
+  getVideoDimensions,
   type RenderStage,
+  type VideoQuality,
 } from "@/lib/quiz/export";
 
 import { buildTimeline } from "@/lib/quiz/timeline";
@@ -34,6 +37,7 @@ import type {
   Orientation,
   Quiz,
 } from "@/lib/quiz/types";
+import { CHARACTERS } from "@/lib/quiz/types";
 
 type VideoStatus =
   | "ready"
@@ -57,6 +61,7 @@ interface BatchVideo {
 interface Props {
   baseQuiz: Quiz;
   orientation: Orientation;
+  videoQuality: VideoQuality;
   audio: AudioEngine;
 
   /** Voice/volume settings — needed so exported narration matches the editor's voice picker. */
@@ -71,6 +76,7 @@ const wait = (ms: number) =>
 export function CsvBatchPanel({
   baseQuiz,
   orientation,
+  videoQuality,
   audio,
   audioSettings,
 }: Readonly<Props>) {
@@ -199,6 +205,7 @@ export function CsvBatchPanel({
         csvRowToQuiz(
           video.row,
           baseQuiz,
+          baseQuiz.character,
         );
 
       /*
@@ -230,15 +237,8 @@ export function CsvBatchPanel({
               isFirstQuestion,
             ),
 
-          width:
-            orientation === "landscape"
-              ? 1920
-              : 1080,
-
-          height:
-            orientation === "landscape"
-              ? 1080
-              : 1920,
+          ...getVideoDimensions(videoQuality, orientation),
+          videoBitrate: getVideoBitrate(videoQuality),
 
           audio,
 
@@ -422,6 +422,9 @@ export function CsvBatchPanel({
 
           <p className="mt-1 text-sm text-muted-foreground">
             One CSV row becomes one independently downloadable quiz video, with narration baked into the MP4.
+          </p>
+          <p className="mt-1 text-sm font-semibold text-primary">
+            Character: {CHARACTERS.find((character) => character.id === baseQuiz.character)?.name ?? baseQuiz.character}
           </p>
         </div>
 
