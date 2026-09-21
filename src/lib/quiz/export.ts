@@ -4,7 +4,7 @@ import {
   Mp4OutputFormat,
   WebMOutputFormat,
   BufferTarget,
-  MediaStreamVideoTrackSource,
+  CanvasSource,
   MediaStreamAudioTrackSource,
   getFirstEncodableVideoCodec,
   getFirstEncodableAudioCodec,
@@ -195,24 +195,14 @@ export async function renderVideo(
 
   const fps = 30;
 
-  const stream = canvas.captureStream(fps);
-
-  const videoTrack = stream.getVideoTracks()[0];
-
-  if (!videoTrack) {
-    throw new Error("Unable to capture the canvas as a video track.");
-  }
-
-  const videoSource = new MediaStreamVideoTrackSource(videoTrack, {
+  // Use explicit timestamps instead of a live MediaStream clock. The latter
+  // can deliver frames out of order when WebCodecs is under backpressure.
+  const videoSource = new CanvasSource(canvas, {
     codec: videoCodec,
     bitrate: videoBitrate,
   });
 
   output.addVideoTrack(videoSource, { frameRate: fps });
-
-  videoSource.errorPromise.catch((error) => {
-    console.error("[export] Video encode error:", error);
-  });
 
   const audioTracks = audio.dest
     ? audio.dest.stream.getAudioTracks()
@@ -256,6 +246,7 @@ export async function renderVideo(
   };
 
   const runKey = Math.random();
+  let lastVideoTimestamp = -1;
 
   const drawAt = (time: number) => {
     const safeTime = Math.max(0, time);
@@ -268,6 +259,18 @@ export async function renderVideo(
       height,
       runKey
     );
+  };
+
+  const addVideoFrame = async (time: number) => {
+    const safeTime = Math.max(0, time);
+    drawAt(safeTime);
+
+    if (safeTime <= lastVideoTimestamp) {
+      return;
+    }
+
+    lastVideoTimestamp = safeTime;
+    await videoSource.add(safeTime);
   };
 
   /* -----------------------------------------------------------------------
@@ -290,7 +293,7 @@ export async function renderVideo(
 
       const localTime = Math.min(elapsed, Math.max(0, beat.dur - 0.001));
 
-      drawAt(beat.start + localTime);
+      await addVideoFrame(beat.start + localTime);
 
       if (beat.kind === "countdown") {
         const remaining = Math.ceil(beat.dur - elapsed);
@@ -335,6 +338,7 @@ export async function renderVideo(
   ): Promise<number> => {
     const start = performance.now();
     let running = true;
+    let lastElapsed = 0;
 
     const drawLoop = async () => {
       while (running) {
@@ -343,8 +347,9 @@ export async function renderVideo(
         }
 
         const elapsed = (performance.now() - start) / 1000;
+        lastElapsed = elapsed;
 
-        drawAt(beat.start + elapsed);
+        await addVideoFrame(beat.start + elapsed);
 
         await nextFrame();
       }
@@ -363,11 +368,12 @@ export async function renderVideo(
 
     const actualDur = Math.max(
       0.25, // technical floor so a beat is never zero-length; not padding
-      spokenSeconds > 0 ? spokenSeconds : estimatedFallbackDur
+      spokenSeconds > 0 ? spokenSeconds : estimatedFallbackDur,
+      lastElapsed
     );
 
     // Final frame at the true end-of-beat time.
-    drawAt(beat.start + actualDur - 0.001);
+    await addVideoFrame(beat.start + actualDur - 0.001);
 
     console.log(
       "[export] Speech beat actual duration:",
@@ -506,8 +512,6 @@ export async function renderVideo(
   audioSource?.close();
 
   await output.finalize();
-
-  stream.getTracks().forEach((track) => track.stop());
 
   if (!target.buffer) {
     throw new Error("Mediabunny did not produce any output data.");

@@ -14,8 +14,8 @@ import { i as SliderTrack, n as SliderRange, r as SliderThumb, t as Slider$1 } f
 import { n as Root, t as Indicator } from "../_libs/radix-ui__react-progress.mjs";
 import { t as Root$1 } from "../_libs/radix-ui__react-label.mjs";
 import { n as SwitchThumb, t as Switch$1 } from "../_libs/radix-ui__react-switch.mjs";
-import { a as MediaStreamVideoTrackSource, c as getFirstEncodableVideoCodec, i as MediaStreamAudioTrackSource, n as Mp4OutputFormat, o as BufferTarget, r as WebMOutputFormat, s as getFirstEncodableAudioCodec, t as Output } from "../_libs/mediabunny.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-IVJerbvX.js
+import { a as MediaStreamAudioTrackSource, c as getFirstEncodableVideoCodec, i as CanvasSource, n as Mp4OutputFormat, o as BufferTarget, r as WebMOutputFormat, s as getFirstEncodableAudioCodec, t as Output } from "../_libs/mediabunny.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DyZtDOeJ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-CY6Hesvc.css";
@@ -5033,6 +5033,9 @@ function getVideoDimensions(quality, orientation) {
 		height: width
 	};
 }
+function getVideoBitrate(quality) {
+	return VIDEO_QUALITY_CONFIG[quality].bitrate;
+}
 async function pickCodecs(width, height, videoBitrate) {
 	const videoCodec = await getFirstEncodableVideoCodec([
 		"avc",
@@ -5063,7 +5066,7 @@ function nextFrame() {
 }
 async function renderVideo(opts) {
 	const { quiz, timeline, width, height, audio, audioSettings, onProgress } = opts;
-	const videoBitrate = opts.videoBitrate ?? VIDEO_QUALITY_CONFIG["1080p"].bitrate;
+	const videoBitrate = opts.videoBitrate ?? getVideoBitrate("1080p");
 	onProgress({
 		stage: "Preparing animation...",
 		percent: 2
@@ -5093,17 +5096,11 @@ async function renderVideo(opts) {
 		target
 	});
 	const fps = 30;
-	const stream = canvas.captureStream(fps);
-	const videoTrack = stream.getVideoTracks()[0];
-	if (!videoTrack) throw new Error("Unable to capture the canvas as a video track.");
-	const videoSource = new MediaStreamVideoTrackSource(videoTrack, {
+	const videoSource = new CanvasSource(canvas, {
 		codec: videoCodec,
 		bitrate: videoBitrate
 	});
 	output.addVideoTrack(videoSource, { frameRate: fps });
-	videoSource.errorPromise.catch((error) => {
-		console.error("[export] Video encode error:", error);
-	});
 	const audioTracks = audio.dest ? audio.dest.stream.getAudioTracks() : [];
 	let audioSource = null;
 	if (audioCodec && audioTracks[0]) {
@@ -5126,6 +5123,11 @@ async function renderVideo(opts) {
 	const drawAt = (time) => {
 		drawFrame(ctx, quiz, getState(runtimeTimeline, quiz, Math.max(0, time)), width, height, runKey);
 	};
+	const addVideoFrame = async (time) => {
+		const safeTime = Math.max(0, time);
+		drawAt(safeTime);
+		await videoSource.add(safeTime);
+	};
 	const renderBeatFixed = async (beat) => {
 		const start = performance_default.now();
 		let lastCountdownSecond = -1;
@@ -5133,7 +5135,7 @@ async function renderVideo(opts) {
 			if (opts.signal?.cancelled) return;
 			const elapsed = (performance_default.now() - start) / 1e3;
 			const localTime = Math.min(elapsed, Math.max(0, beat.dur - .001));
-			drawAt(beat.start + localTime);
+			await addVideoFrame(beat.start + localTime);
 			if (beat.kind === "countdown") {
 				const remaining = Math.ceil(beat.dur - elapsed);
 				if (remaining > 0 && remaining !== lastCountdownSecond) {
@@ -5157,7 +5159,7 @@ async function renderVideo(opts) {
 			while (running) {
 				if (opts.signal?.cancelled) return;
 				const elapsed = (performance_default.now() - start) / 1e3;
-				drawAt(beat.start + elapsed);
+				await addVideoFrame(beat.start + elapsed);
 				await nextFrame();
 			}
 		};
@@ -5166,7 +5168,7 @@ async function renderVideo(opts) {
 		running = false;
 		await loopPromise;
 		const actualDur = Math.max(.25, spokenSeconds > 0 ? spokenSeconds : estimatedFallbackDur);
-		drawAt(beat.start + actualDur - .001);
+		await addVideoFrame(beat.start + actualDur - .001);
 		console.log("[export] Speech beat actual duration:", beat.kind, actualDur.toFixed(2) + "s", spokenSeconds > 0 ? "(measured)" : "(fallback estimate — no audio played)");
 		return actualDur;
 	};
@@ -5223,7 +5225,6 @@ async function renderVideo(opts) {
 	videoSource.close();
 	audioSource?.close();
 	await output.finalize();
-	stream.getTracks().forEach((track) => track.stop());
 	if (!target.buffer) throw new Error("Mediabunny did not produce any output data.");
 	const blob = new Blob([target.buffer], { type: output.format.mimeType });
 	onProgress({
@@ -5303,7 +5304,7 @@ function CsvBatchPanel({ baseQuiz, orientation, videoQuality, audio, audioSettin
 				quiz,
 				timeline: buildTimeline(quiz, crypto.getRandomValues(/* @__PURE__ */ new Uint32Array(1))[0], isFirstQuestion),
 				...getVideoDimensions(videoQuality, orientation),
-				videoBitrate: videoQuality === "4k" ? 32e6 : videoQuality === "2k" ? 16e6 : 8e6,
+				videoBitrate: getVideoBitrate(videoQuality),
 				audio,
 				audioSettings,
 				onProgress: ({ percent, stage }) => update(video.id, {
@@ -6076,7 +6077,7 @@ function Studio() {
 				timeline,
 				width,
 				height,
-				videoBitrate: videoQuality === "4k" ? 32e6 : videoQuality === "2k" ? 16e6 : 8e6,
+				videoBitrate: getVideoBitrate(videoQuality),
 				audio: audioRef.current,
 				audioSettings,
 				onProgress: setProgress

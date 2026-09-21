@@ -326,105 +326,6 @@ var validateRectangle = (rect, propertyPath) => {
 	if (!Number.isInteger(rect.width) || rect.width < 0) throw new TypeError(`${propertyPath}.width must be a non-negative integer.`);
 	if (!Number.isInteger(rect.height) || rect.height < 0) throw new TypeError(`${propertyPath}.height must be a non-negative integer.`);
 };
-var unthrottledTimerWorker;
-var nextUnthrottledTimerId = 1;
-var unthrottledTimeoutCallbacks = /* @__PURE__ */ new Map();
-var unthrottledIntervalCallbacks = /* @__PURE__ */ new Map();
-var shouldUseNativeTimers = () => {
-	return typeof window === "undefined";
-};
-var unthrottledTimerWorkerMain = () => {
-	const timeoutHandles = /* @__PURE__ */ new Map();
-	const intervalHandles = /* @__PURE__ */ new Map();
-	self.onmessage = (event) => {
-		const message = event.data;
-		switch (message.type) {
-			case "set-timeout":
-				{
-					const handle = setTimeout(() => {
-						timeoutHandles.delete(message.timerId);
-						self.postMessage({
-							type: "fire",
-							timerId: message.timerId
-						});
-					}, message.delay);
-					timeoutHandles.set(message.timerId, handle);
-				}
-				break;
-			case "set-interval":
-				{
-					const handle = setInterval(() => {
-						self.postMessage({
-							type: "fire",
-							timerId: message.timerId
-						});
-					}, message.delay);
-					intervalHandles.set(message.timerId, handle);
-				}
-				break;
-			case "clear-timeout":
-				{
-					const handle = timeoutHandles.get(message.timerId);
-					if (handle !== void 0) {
-						clearTimeout(handle);
-						timeoutHandles.delete(message.timerId);
-					}
-				}
-				break;
-			case "clear-interval": {
-				const handle = intervalHandles.get(message.timerId);
-				if (handle !== void 0) {
-					clearInterval(handle);
-					intervalHandles.delete(message.timerId);
-				}
-			}
-		}
-	};
-};
-var getUnthrottledTimerWorker = () => {
-	if (unthrottledTimerWorker) return unthrottledTimerWorker;
-	const workerSource = `(${unthrottledTimerWorkerMain.toString()})();`;
-	const workerURL = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
-	unthrottledTimerWorker = new Worker(workerURL);
-	URL.revokeObjectURL(workerURL);
-	unthrottledTimerWorker.onmessage = (event) => {
-		const message = event.data;
-		const timeoutCallback = unthrottledTimeoutCallbacks.get(message.timerId);
-		if (timeoutCallback) {
-			unthrottledTimeoutCallbacks.delete(message.timerId);
-			timeoutCallback();
-			return;
-		}
-		const intervalCallback = unthrottledIntervalCallbacks.get(message.timerId);
-		if (intervalCallback) intervalCallback();
-	};
-	return unthrottledTimerWorker;
-};
-var setIntervalUnthrottled = (callback, delay) => {
-	if (shouldUseNativeTimers()) return { id: setInterval(callback, delay) };
-	const timerId = nextUnthrottledTimerId++;
-	unthrottledIntervalCallbacks.set(timerId, () => {
-		callback();
-	});
-	getUnthrottledTimerWorker().postMessage({
-		type: "set-interval",
-		timerId,
-		delay
-	});
-	return { id: timerId };
-};
-var clearIntervalUnthrottled = (timer) => {
-	if (shouldUseNativeTimers()) {
-		clearInterval(timer.id);
-		return;
-	}
-	assert(typeof timer.id === "number");
-	unthrottledIntervalCallbacks.delete(timer.id);
-	getUnthrottledTimerWorker().postMessage({
-		type: "clear-interval",
-		timerId: timer.id
-	});
-};
 var wait = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -10549,243 +10450,44 @@ var colorAlphaSplitterWorkerCode = () => {
 	};
 };
 /**
-* Video source that encodes the frames of a
-* [`MediaStreamVideoTrack`](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack) and pipes them into the
-* output. This is useful for capturing live or real-time data such as webcams or screen captures. Frames will
-* automatically start being captured once the connected {@link Output} is started, and will keep being captured until
-* the {@link Output} is finalized or this source is closed.
+* This source can be used to add video frames to the output track from a fixed canvas element. Since canvases are often
+* used for rendering, this source provides a convenient wrapper around {@link VideoSampleSource}.
 * @group Media sources
 * @public
 */
-var MediaStreamVideoTrackSource = class extends VideoSource {
-	/** A promise that rejects upon any error within this source. This promise never resolves. */
-	get errorPromise() {
-		this._errorPromiseAccessed = true;
-		return this._promiseWithResolvers.promise;
-	}
-	/** Whether this source is currently paused as a result of calling `.pause()`. */
-	get paused() {
-		return this._paused;
-	}
+var CanvasSource = class extends VideoSource {
 	/**
-	* Creates a new {@link MediaStreamVideoTrackSource} from a
-	* [`MediaStreamVideoTrack`](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack), which will pull
-	* video samples from the stream in real time and encode them according to {@link VideoEncodingConfig}.
+	* Creates a new {@link CanvasSource} from a canvas element or `OffscreenCanvas` whose samples are encoded
+	* according to the specified {@link VideoEncodingConfig}.
 	*/
-	constructor(track, encodingConfig, options = {}) {
-		if (!(track instanceof MediaStreamTrack) || track.kind !== "video") throw new TypeError("track must be a video MediaStreamTrack.");
+	constructor(canvas, encodingConfig) {
+		if (!(typeof HTMLCanvasElement !== "undefined" && canvas instanceof HTMLCanvasElement) && !(typeof OffscreenCanvas !== "undefined" && canvas instanceof OffscreenCanvas)) throw new TypeError("canvas must be an HTMLCanvasElement or OffscreenCanvas.");
 		validateVideoEncodingConfig(encodingConfig);
-		if (typeof options !== "object" || !options) throw new TypeError("options must be an object.");
-		if (options.frameRate != null && (typeof options.frameRate !== "number" || options.frameRate <= 0)) throw new TypeError("options.frameRate, when provided, must be either a positive number or null.");
-		if (options.timestampBase !== void 0 && options.timestampBase !== "synced-zero" && options.timestampBase !== "zero" && options.timestampBase !== "unix") throw new TypeError("options.timestampBase, when provided, must be one of 'synced-zero', 'zero', or 'unix'.");
-		encodingConfig = {
-			...encodingConfig,
-			latencyMode: "realtime"
-		};
 		super(encodingConfig.codec);
-		/** @internal */
-		this._abortController = null;
-		/** @internal */
-		this._workerTrackId = null;
-		/** @internal */
-		this._workerListener = null;
-		/** @internal */
-		this._promiseWithResolvers = promiseWithResolvers();
-		/** @internal */
-		this._errorPromiseAccessed = false;
-		/** @internal */
-		this._paused = false;
-		/** @internal */
-		this._lastVideoFrame = null;
-		/** @internal */
-		this._timerHandle = null;
-		/** @internal */
-		this._videoElement = null;
-		this._options = options;
 		this._encoder = new VideoEncoderWrapper(this, encodingConfig);
-		this._track = track;
-	}
-	/** @internal */
-	async _start() {
-		if (!this._errorPromiseAccessed) Logging._warn("Make sure not to ignore the `errorPromise` field on MediaStreamVideoTrackSource, so that any internal errors get bubbled up properly.");
-		const frameRate = this._options.frameRate !== void 0 ? this._options.frameRate : this._track.getSettings().frameRate ?? null;
-		this._abortController = new AbortController();
-		let firstVideoFrameTimestamp = null;
-		let lastFrameTime = null;
-		let frameCount = 0;
-		let errored = false;
-		let lastSampleTimestamp = null;
-		let timestampOffset = 0;
-		const tick = () => {
-			assert(frameRate !== null);
-			if (!this._lastVideoFrame) return;
-			assert(lastFrameTime !== null);
-			assert(firstVideoFrameTimestamp !== null);
-			const now = performance_default.now();
-			while (now - lastFrameTime > 1e3 / frameRate) {
-				lastFrameTime += 1e3 / frameRate;
-				const timestamp = firstVideoFrameTimestamp + frameCount / frameRate;
-				const frame = new VideoFrame(this._videoElement ?? this._lastVideoFrame, {
-					timestamp: 1e6 * timestamp,
-					duration: 1e6 / frameRate
-				});
-				addVideoFrame(frame, now);
-			}
-		};
-		if (frameRate !== null) this._timerHandle = setIntervalUnthrottled(tick, 4);
-		const onVideoFrame = (videoFrame) => {
-			if (frameRate === null) addVideoFrame(videoFrame);
-			else {
-				const now = performance_default.now();
-				if (!this._lastVideoFrame) {
-					addVideoFrame(videoFrame.clone(), now);
-					lastFrameTime = now;
-					this._lastVideoFrame = videoFrame;
-				} else {
-					tick();
-					this._lastVideoFrame?.close();
-					this._lastVideoFrame = videoFrame;
-				}
-			}
-		};
-		const addVideoFrame = (videoFrame, now = performance_default.now()) => {
-			if (errored) {
-				videoFrame.close();
-				return;
-			}
-			frameCount++;
-			const currentTimestamp = videoFrame.timestamp / 1e6;
-			if (this._paused) {
-				if (firstVideoFrameTimestamp !== null) {
-					if (lastSampleTimestamp !== null && this._options.timestampBase !== "unix") {
-						const timeDelta = currentTimestamp - lastSampleTimestamp;
-						timestampOffset -= timeDelta;
-					}
-					lastSampleTimestamp = currentTimestamp;
-				}
-				videoFrame.close();
-				return;
-			}
-			if (firstVideoFrameTimestamp === null) {
-				firstVideoFrameTimestamp = currentTimestamp;
-				let target;
-				const timestampBase = this._options.timestampBase ?? "synced-zero";
-				if (timestampBase === "unix") target = Date.now() / 1e3;
-				else if (timestampBase === "zero") target = 0;
-				else {
-					const output = this._connectedTrack.output;
-					if (output._firstMediaStreamTimestamp === null) {
-						output._firstMediaStreamTimestamp = now / 1e3;
-						target = 0;
-					} else target = now / 1e3 - output._firstMediaStreamTimestamp;
-				}
-				timestampOffset = target - firstVideoFrameTimestamp;
-			}
-			lastSampleTimestamp = currentTimestamp;
-			if (this._encoder.getQueueSize() >= 8) {
-				videoFrame.close();
-				return;
-			}
-			const sample = new VideoSample(videoFrame, { timestamp: currentTimestamp + timestampOffset });
-			this._encoder.add(sample, true).catch((error) => {
-				errored = true;
-				this._abortController?.abort();
-				this._promiseWithResolvers.reject(error);
-				if (this._workerTrackId !== null) sendMessageToMediaStreamTrackProcessorWorker({
-					type: "stopTrack",
-					trackId: this._workerTrackId
-				});
-			});
-		};
-		if (typeof MediaStreamTrackProcessor !== "undefined") {
-			const processor = new MediaStreamTrackProcessor({ track: this._track });
-			const consumer = new WritableStream({ write: onVideoFrame });
-			processor.readable.pipeTo(consumer, { signal: this._abortController.signal }).catch((error) => {
-				if (error instanceof DOMException && error.name === "AbortError") return;
-				this._promiseWithResolvers.reject(error);
-			});
-		} else if (await mediaStreamTrackProcessorIsSupportedInWorker()) {
-			this._workerTrackId = nextMediaStreamTrackProcessorWorkerId++;
-			sendMessageToMediaStreamTrackProcessorWorker({
-				type: "videoTrack",
-				trackId: this._workerTrackId,
-				track: this._track
-			});
-			this._workerListener = (event) => {
-				const message = event.data;
-				if (message.type === "videoFrame" && message.trackId === this._workerTrackId) onVideoFrame(message.videoFrame);
-				else if (message.type === "error" && message.trackId === this._workerTrackId) this._promiseWithResolvers.reject(message.error);
-			};
-			mediaStreamTrackProcessorWorker.addEventListener("message", this._workerListener);
-		} else if (frameRate !== null) {
-			const video = document.createElement("video");
-			video.style.position = "fixed";
-			video.style.left = "-10000px";
-			video.style.top = "-10000px";
-			video.style.width = "1px";
-			video.style.height = "1px";
-			video.style.opacity = "0";
-			video.style.pointerEvents = "none";
-			video.muted = true;
-			video.srcObject = new MediaStream([this._track]);
-			document.body.appendChild(video);
-			this._videoElement = video;
-			video.addEventListener("loadeddata", () => {
-				if (errored || !this._videoElement) return;
-				const frame = new VideoFrame(video, { timestamp: 1e3 * performance_default.now() });
-				onVideoFrame(frame);
-				frame.close();
-			}, { once: true });
-			video.play().catch((error) => {
-				errored = true;
-				this._promiseWithResolvers.reject(error);
-			});
-		} else throw new Error("When no explicit frame rate is set, MediaStreamTrackProcessor is required; but it's not available in this environment.");
+		this._canvas = canvas;
 	}
 	/**
-	* Pauses the capture of video frames - any video frames emitted by the underlying media stream will be ignored
-	* while paused. This does *not* close the underlying `MediaStreamVideoTrack`, it just ignores its output.
+	* Captures the current canvas state as a video sample (frame), encodes it and adds it to the output.
+	*
+	* @param timestamp - The timestamp of the sample, in seconds.
+	* @param duration - The duration of the sample, in seconds.
+	*
+	* @returns A Promise that resolves once the output is ready to receive more samples. You should await this Promise
+	* to respect writer and encoder backpressure.
 	*/
-	pause() {
-		this._paused = true;
-	}
-	/** Resumes the capture of video frames after being paused. */
-	resume() {
-		this._paused = false;
+	add(timestamp, duration = 0, encodeOptions) {
+		if (!Number.isFinite(timestamp) || timestamp < 0) throw new TypeError("timestamp must be a non-negative number.");
+		if (!Number.isFinite(duration) || duration < 0) throw new TypeError("duration must be a non-negative number.");
+		const sample = new VideoSample(this._canvas, {
+			timestamp,
+			duration
+		});
+		return this._encoder.add(sample, true, encodeOptions);
 	}
 	/** @internal */
-	async _flushAndClose(forceClose) {
-		if (this._abortController) {
-			this._abortController.abort();
-			this._abortController = null;
-		}
-		if (this._timerHandle) clearIntervalUnthrottled(this._timerHandle);
-		this._lastVideoFrame?.close();
-		if (this._videoElement) {
-			this._videoElement.srcObject = null;
-			this._videoElement.remove();
-			this._videoElement = null;
-		}
-		if (this._workerTrackId !== null) {
-			assert(this._workerListener);
-			sendMessageToMediaStreamTrackProcessorWorker({
-				type: "stopTrack",
-				trackId: this._workerTrackId
-			});
-			await new Promise((resolve) => {
-				const listener = (event) => {
-					const message = event.data;
-					if (message.type === "trackStopped" && message.trackId === this._workerTrackId) {
-						assert(this._workerListener);
-						mediaStreamTrackProcessorWorker.removeEventListener("message", this._workerListener);
-						mediaStreamTrackProcessorWorker.removeEventListener("message", listener);
-						resolve();
-					}
-				};
-				mediaStreamTrackProcessorWorker.addEventListener("message", listener);
-			});
-		}
-		await this._encoder.flushAndClose(forceClose);
+	_flushAndClose(forceClose) {
+		return this._encoder.flushAndClose(forceClose);
 	}
 };
 /**
@@ -11285,95 +10987,6 @@ var MediaStreamAudioTrackSource = class extends AudioSource {
 		}
 		await this._encoder.flushAndClose(forceClose);
 	}
-};
-var mediaStreamTrackProcessorWorkerCode = () => {
-	const sendMessage = (message, transfer) => {
-		if (transfer) self.postMessage(message, { transfer });
-		else self.postMessage(message);
-	};
-	sendMessage({
-		type: "support",
-		supported: typeof MediaStreamTrackProcessor !== "undefined"
-	});
-	const abortControllers = /* @__PURE__ */ new Map();
-	const activeTracks = /* @__PURE__ */ new Map();
-	self.addEventListener("message", (event) => {
-		const message = event.data;
-		switch (message.type) {
-			case "videoTrack":
-				{
-					activeTracks.set(message.trackId, message.track);
-					const processor = new MediaStreamTrackProcessor({ track: message.track });
-					const consumer = new WritableStream({ write: (videoFrame) => {
-						if (!activeTracks.has(message.trackId)) {
-							videoFrame.close();
-							return;
-						}
-						sendMessage({
-							type: "videoFrame",
-							trackId: message.trackId,
-							videoFrame
-						}, [videoFrame]);
-					} });
-					const abortController = new AbortController();
-					abortControllers.set(message.trackId, abortController);
-					processor.readable.pipeTo(consumer, { signal: abortController.signal }).catch((error) => {
-						if (error instanceof DOMException && error.name === "AbortError") return;
-						sendMessage({
-							type: "error",
-							trackId: message.trackId,
-							error
-						});
-					});
-				}
-				break;
-			case "stopTrack":
-				{
-					const abortController = abortControllers.get(message.trackId);
-					if (abortController) {
-						abortController.abort();
-						abortControllers.delete(message.trackId);
-					}
-					activeTracks.get(message.trackId)?.stop();
-					activeTracks.delete(message.trackId);
-					sendMessage({
-						type: "trackStopped",
-						trackId: message.trackId
-					});
-				}
-				break;
-			default: assertNever(message);
-		}
-	});
-};
-var nextMediaStreamTrackProcessorWorkerId = 0;
-var mediaStreamTrackProcessorWorker = null;
-var initMediaStreamTrackProcessorWorker = () => {
-	const blob = new Blob([`(${mediaStreamTrackProcessorWorkerCode.toString()})()`], { type: "application/javascript" });
-	const url = URL.createObjectURL(blob);
-	mediaStreamTrackProcessorWorker = new Worker(url);
-};
-var mediaStreamTrackProcessorIsSupportedInWorkerCache = null;
-var mediaStreamTrackProcessorIsSupportedInWorker = async () => {
-	if (mediaStreamTrackProcessorIsSupportedInWorkerCache !== null) return mediaStreamTrackProcessorIsSupportedInWorkerCache;
-	if (!mediaStreamTrackProcessorWorker) initMediaStreamTrackProcessorWorker();
-	return new Promise((resolve) => {
-		assert(mediaStreamTrackProcessorWorker);
-		const listener = (event) => {
-			const message = event.data;
-			if (message.type === "support") {
-				mediaStreamTrackProcessorIsSupportedInWorkerCache = message.supported;
-				mediaStreamTrackProcessorWorker.removeEventListener("message", listener);
-				resolve(message.supported);
-			}
-		};
-		mediaStreamTrackProcessorWorker.addEventListener("message", listener);
-	});
-};
-var sendMessageToMediaStreamTrackProcessorWorker = (message, transfer) => {
-	assert(mediaStreamTrackProcessorWorker);
-	if (transfer) mediaStreamTrackProcessorWorker.postMessage(message, transfer);
-	else mediaStreamTrackProcessorWorker.postMessage(message);
 };
 /**
 * Base class for subtitle sources - sources for subtitle tracks.
@@ -12204,4 +11817,4 @@ var Output = class extends EventEmitter {
 	}
 };
 //#endregion
-export { MediaStreamVideoTrackSource as a, getFirstEncodableVideoCodec as c, MediaStreamAudioTrackSource as i, Mp4OutputFormat as n, BufferTarget as o, WebMOutputFormat as r, getFirstEncodableAudioCodec as s, Output as t };
+export { MediaStreamAudioTrackSource as a, getFirstEncodableVideoCodec as c, CanvasSource as i, Mp4OutputFormat as n, BufferTarget as o, WebMOutputFormat as r, getFirstEncodableAudioCodec as s, Output as t };
